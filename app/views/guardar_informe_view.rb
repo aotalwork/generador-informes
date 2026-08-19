@@ -3,7 +3,13 @@ require "fileutils"
 
 class GuardarInformeView
 
-  def initialize(application, ruta_origen:, nombre_sugerido:, on_guardado:, on_cancelar:)
+  def initialize(
+    application,
+    ruta_origen:,
+    nombre_sugerido:,
+    on_guardado:,
+    on_cancelar:
+  )
     @application = application
     @ruta_origen = ruta_origen
     @nombre_sugerido = nombre_sugerido
@@ -39,7 +45,7 @@ class GuardarInformeView
     titulo.halign = :start
 
     # -----------------------------
-    # Nombre del archivo
+    # Nombre
     # -----------------------------
 
     etiqueta_nombre = Gtk::Label.new("Nombre del archivo")
@@ -50,7 +56,7 @@ class GuardarInformeView
     @nombre_entry.hexpand = true
 
     # -----------------------------
-    # Carpeta de destino
+    # Carpeta
     # -----------------------------
 
     etiqueta_carpeta = Gtk::Label.new("Carpeta de destino")
@@ -65,18 +71,17 @@ class GuardarInformeView
     @ruta_label.hexpand = true
 
     boton_carpeta = Gtk::Button.new(
-      label: "📁  Seleccionar carpeta"
+      label: "Seleccionar carpeta..."
     )
 
     boton_carpeta.halign = :start
-    boton_carpeta.add_css_class("suggested-action")
 
     boton_carpeta.signal_connect("clicked") do
-      abrir_selector_carpeta
+      seleccionar_carpeta
     end
 
     # -----------------------------
-    # Botones inferiores
+    # Botones
     # -----------------------------
 
     botones = Gtk::Box.new(:horizontal, 10)
@@ -105,7 +110,7 @@ class GuardarInformeView
     botones.append(boton_guardar)
 
     # -----------------------------
-    # Montar interfaz
+    # Interfaz
     # -----------------------------
 
     principal.append(titulo)
@@ -123,38 +128,58 @@ class GuardarInformeView
   end
 
   # ============================================================
-  # SELECTOR PROPIO DE CARPETAS
+  # SELECTOR NATIVO GTK4
   # ============================================================
 
-  def abrir_selector_carpeta
+  def seleccionar_carpeta
 
-    carpeta_inicial = @carpeta_destino || File.expand_path("~/Documents")
+    dialogo = Gtk::FileDialog.new
 
-    @selector_carpeta = SelectorCarpetaView.new(
-      @application,
+    dialogo.title = "Seleccionar carpeta"
+    dialogo.modal = true
+    dialogo.accept_label = "Seleccionar"
 
-      carpeta_inicial: carpeta_inicial,
+    # Abrir inicialmente en Documents
+    carpeta_inicial = File.expand_path("~/Documents")
 
-      on_seleccionar: ->(ruta) {
-
-        @carpeta_destino = ruta
-
-        @ruta_label.text = "📁  #{ruta}"
-
-        puts
-        puts "========================================"
-        puts "CARPETA DE DESTINO SELECCIONADA"
-        puts "========================================"
-        puts ruta
-        puts "========================================"
-      },
-
-      on_cancelar: -> {
-        @ventana.present
-      }
+    archivo_carpeta = Gio::File.new_for_path(
+      carpeta_inicial
     )
 
-    @selector_carpeta.mostrar
+    dialogo.initial_folder = archivo_carpeta
+
+    dialogo.select_folder(@ventana) do |resultado|
+
+      begin
+
+        carpeta = dialogo.select_folder_finish(
+          resultado
+        )
+
+        if carpeta
+
+          @carpeta_destino = carpeta.path
+
+          @ruta_label.text =
+            @carpeta_destino
+
+          puts
+          puts "========================================"
+          puts "CARPETA SELECCIONADA"
+          puts "========================================"
+          puts @carpeta_destino
+          puts "========================================"
+
+        end
+
+      rescue StandardError => e
+
+        # Cancelar el selector no es un error
+        puts "Selector cancelado: #{e.message}"
+
+      end
+
+    end
   end
 
   # ============================================================
@@ -166,20 +191,25 @@ class GuardarInformeView
     nombre = @nombre_entry.text.strip
 
     if nombre.empty?
+
       mostrar_error(
         "Debes introducir un nombre para el archivo."
       )
+
       return
     end
 
     if @carpeta_destino.nil?
+
       mostrar_error(
         "Debes seleccionar una carpeta de destino."
       )
+
       return
     end
 
-    nombre += ".pdf" unless nombre.downcase.end_with?(".pdf")
+    nombre += ".pdf" unless
+      nombre.downcase.end_with?(".pdf")
 
     ruta_destino = File.join(
       @carpeta_destino,
@@ -190,7 +220,7 @@ class GuardarInformeView
   end
 
   # ============================================================
-  # COPIAR PDF
+  # GUARDAR ARCHIVO
   # ============================================================
 
   def guardar_archivo(ruta_destino)
@@ -221,7 +251,9 @@ class GuardarInformeView
 
       @ventana.close
 
-      @on_guardado.call(ruta_destino)
+      @on_guardado.call(
+        ruta_destino
+      )
 
     rescue StandardError => e
 
@@ -236,6 +268,7 @@ class GuardarInformeView
       mostrar_error(
         "No se ha podido guardar el informe.\n\n#{e.message}"
       )
+
     end
   end
 

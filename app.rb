@@ -2,7 +2,7 @@ require "bundler/setup"
 require "gtk4"
 require "yaml"
 require "tmpdir"
-require_relative "app/views/selector_carpeta_view"
+
 require_relative "app/models/campo_informe"
 require_relative "app/models/tipo_informe"
 
