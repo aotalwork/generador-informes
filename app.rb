@@ -44,6 +44,7 @@ class GeneradorInformes
 
 
 
+
 def cargar_estilos
 
   provider = Gtk::CssProvider.new
@@ -62,6 +63,8 @@ def cargar_estilos
   )
 
 end
+
+
 
 
 

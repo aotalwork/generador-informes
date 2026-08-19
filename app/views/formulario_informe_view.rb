@@ -32,8 +32,7 @@ class FormularioInformeView
     principal.margin_end = 40
 
     titulo = Gtk::Label.new(@tipo.nombre)
-    titulo.add_css_class("title-1")
-
+    titulo.add_css_class("page-title")
     descripcion = Gtk::Label.new(@tipo.descripcion)
     descripcion.wrap = true
 

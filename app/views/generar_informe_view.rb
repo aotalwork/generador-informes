@@ -43,7 +43,7 @@ class GenerarInformeView
       "GENERAR INFORME"
     )
 
-    titulo.add_css_class("title-1")
+    titulo.add_css_class("page-title")
 
     tipo = Gtk::Label.new(
       "Tipo: #{@tipo.nombre}"
