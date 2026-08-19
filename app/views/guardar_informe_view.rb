@@ -44,22 +44,22 @@ class GuardarInformeView
     titulo.add_css_class("title-2")
     titulo.halign = :start
 
-    # -----------------------------
-    # Nombre
-    # -----------------------------
+    # Nombre del archivo
 
-    etiqueta_nombre = Gtk::Label.new("Nombre del archivo")
+    etiqueta_nombre = Gtk::Label.new(
+      "Nombre del archivo"
+    )
     etiqueta_nombre.halign = :start
 
     @nombre_entry = Gtk::Entry.new
     @nombre_entry.text = @nombre_sugerido
     @nombre_entry.hexpand = true
 
-    # -----------------------------
-    # Carpeta
-    # -----------------------------
+    # Carpeta de destino
 
-    etiqueta_carpeta = Gtk::Label.new("Carpeta de destino")
+    etiqueta_carpeta = Gtk::Label.new(
+      "Carpeta de destino"
+    )
     etiqueta_carpeta.halign = :start
 
     @ruta_label = Gtk::Label.new(
@@ -80,11 +80,13 @@ class GuardarInformeView
       seleccionar_carpeta
     end
 
-    # -----------------------------
     # Botones
-    # -----------------------------
 
-    botones = Gtk::Box.new(:horizontal, 10)
+    botones = Gtk::Box.new(
+      :horizontal,
+      10
+    )
+
     botones.halign = :end
 
     boton_cancelar = Gtk::Button.new(
@@ -95,7 +97,9 @@ class GuardarInformeView
       label: "Guardar"
     )
 
-    boton_guardar.add_css_class("suggested-action")
+    boton_guardar.add_css_class(
+      "suggested-action"
+    )
 
     boton_cancelar.signal_connect("clicked") do
       @ventana.close
@@ -109,9 +113,7 @@ class GuardarInformeView
     botones.append(boton_cancelar)
     botones.append(boton_guardar)
 
-    # -----------------------------
     # Interfaz
-    # -----------------------------
 
     principal.append(titulo)
 
@@ -131,56 +133,66 @@ class GuardarInformeView
   # SELECTOR NATIVO GTK4
   # ============================================================
 
-  def seleccionar_carpeta
 
-    dialogo = Gtk::FileDialog.new
+def seleccionar_carpeta
 
-    dialogo.title = "Seleccionar carpeta"
-    dialogo.modal = true
-    dialogo.accept_label = "Seleccionar"
+  dialogo = Gtk::FileDialog.new
 
-    # Abrir inicialmente en Documents
-    carpeta_inicial = File.expand_path("~/Documents")
+  dialogo.title = "Seleccionar carpeta"
+  dialogo.accept_label = "Seleccionar"
 
-    archivo_carpeta = Gio::File.new_for_path(
-      carpeta_inicial
-    )
+  carpeta_inicial = @carpeta_destino ||
+                    File.expand_path("~/Documents")
 
-    dialogo.initial_folder = archivo_carpeta
+  dialogo.initial_folder =
+    Gio::File.new_for_path(carpeta_inicial)
 
-    dialogo.select_folder(@ventana) do |resultado|
+  dialogo.select_folder(@ventana) do |source, resultado|
 
-      begin
+    begin
 
-        carpeta = dialogo.select_folder_finish(
-          resultado
-        )
+      carpeta = dialogo.select_folder_finish(
+        resultado
+      )
 
-        if carpeta
+      if carpeta
 
-          @carpeta_destino = carpeta.path
+        @carpeta_destino = carpeta.path
 
-          @ruta_label.text =
-            @carpeta_destino
+        @ruta_label.text =
+          @carpeta_destino
 
-          puts
-          puts "========================================"
-          puts "CARPETA SELECCIONADA"
-          puts "========================================"
-          puts @carpeta_destino
-          puts "========================================"
-
-        end
-
-      rescue StandardError => e
-
-        # Cancelar el selector no es un error
-        puts "Selector cancelado: #{e.message}"
+        puts
+        puts "========================================"
+        puts "CARPETA SELECCIONADA"
+        puts "========================================"
+        puts @carpeta_destino
+        puts "========================================"
 
       end
 
+    rescue GLib::Error => e
+
+      puts "Selector cancelado: #{e.message}"
+
+    rescue StandardError => e
+
+      puts
+      puts "ERROR EN SELECTOR DE CARPETAS"
+      puts e.class
+      puts e.message
+      puts
+
+      mostrar_error(
+        "No se ha podido seleccionar la carpeta.\n\n#{e.message}"
+      )
+
     end
+
   end
+end
+
+
 
   # ============================================================
   # GUARDAR

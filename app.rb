@@ -1,5 +1,6 @@
 require "bundler/setup"
 require "gtk4"
+require "pathname"
 require "yaml"
 require "tmpdir"
 
@@ -31,6 +32,7 @@ class GeneradorInformes
     )
 
     @app.signal_connect("activate") do |application|
+      cargar_estilos
       mostrar_ventana_principal(application)
     end
   end
@@ -39,6 +41,31 @@ class GeneradorInformes
   def ejecutar
     @app.run
   end
+
+
+
+def cargar_estilos
+
+  provider = Gtk::CssProvider.new
+
+  ruta = File.expand_path(
+    "app/styles/app.css",
+    __dir__
+  )
+
+  provider.load_from_path(ruta)
+
+  Gtk::StyleContext.add_provider_for_display(
+    Gdk::Display.default,
+    provider,
+    800
+  )
+
+end
+
+
+
+
 
 
   private
