@@ -10,6 +10,8 @@ class GuardarInformeView
     @on_guardado = on_guardado
     @on_cancelar = on_cancelar
 
+    @carpeta_destino = nil
+
     crear_ventana
   end
 
@@ -23,7 +25,7 @@ class GuardarInformeView
     @ventana = Gtk::ApplicationWindow.new(@application)
 
     @ventana.title = "Guardar informe"
-    @ventana.set_default_size(650, 220)
+    @ventana.set_default_size(650, 320)
 
     principal = Gtk::Box.new(:vertical, 15)
 
@@ -34,19 +36,61 @@ class GuardarInformeView
 
     titulo = Gtk::Label.new("Guardar informe")
     titulo.add_css_class("title-2")
+    titulo.halign = :start
 
-    etiqueta = Gtk::Label.new("Nombre del archivo")
-    etiqueta.halign = :start
+    # -----------------------------
+    # Nombre del archivo
+    # -----------------------------
+
+    etiqueta_nombre = Gtk::Label.new("Nombre del archivo")
+    etiqueta_nombre.halign = :start
 
     @nombre_entry = Gtk::Entry.new
     @nombre_entry.text = @nombre_sugerido
     @nombre_entry.hexpand = true
 
+    # -----------------------------
+    # Carpeta de destino
+    # -----------------------------
+
+    etiqueta_carpeta = Gtk::Label.new("Carpeta de destino")
+    etiqueta_carpeta.halign = :start
+
+    @ruta_label = Gtk::Label.new(
+      "No se ha seleccionado ninguna carpeta"
+    )
+
+    @ruta_label.halign = :start
+    @ruta_label.wrap = true
+    @ruta_label.hexpand = true
+
+    boton_carpeta = Gtk::Button.new(
+      label: "📁  Seleccionar carpeta"
+    )
+
+    boton_carpeta.halign = :start
+    boton_carpeta.add_css_class("suggested-action")
+
+    boton_carpeta.signal_connect("clicked") do
+      abrir_selector_carpeta
+    end
+
+    # -----------------------------
+    # Botones inferiores
+    # -----------------------------
+
     botones = Gtk::Box.new(:horizontal, 10)
     botones.halign = :end
 
-    boton_cancelar = Gtk::Button.new(label: "Cancelar")
-    boton_guardar = Gtk::Button.new(label: "Guardar")
+    boton_cancelar = Gtk::Button.new(
+      label: "Cancelar"
+    )
+
+    boton_guardar = Gtk::Button.new(
+      label: "Guardar"
+    )
+
+    boton_guardar.add_css_class("suggested-action")
 
     boton_cancelar.signal_connect("clicked") do
       @ventana.close
@@ -60,57 +104,94 @@ class GuardarInformeView
     botones.append(boton_cancelar)
     botones.append(boton_guardar)
 
+    # -----------------------------
+    # Montar interfaz
+    # -----------------------------
+
     principal.append(titulo)
-    principal.append(etiqueta)
+
+    principal.append(etiqueta_nombre)
     principal.append(@nombre_entry)
+
+    principal.append(etiqueta_carpeta)
+    principal.append(@ruta_label)
+    principal.append(boton_carpeta)
+
     principal.append(botones)
 
     @ventana.child = principal
   end
 
+  # ============================================================
+  # SELECTOR PROPIO DE CARPETAS
+  # ============================================================
+
+  def abrir_selector_carpeta
+
+    carpeta_inicial = @carpeta_destino || File.expand_path("~/Documents")
+
+    @selector_carpeta = SelectorCarpetaView.new(
+      @application,
+
+      carpeta_inicial: carpeta_inicial,
+
+      on_seleccionar: ->(ruta) {
+
+        @carpeta_destino = ruta
+
+        @ruta_label.text = "📁  #{ruta}"
+
+        puts
+        puts "========================================"
+        puts "CARPETA DE DESTINO SELECCIONADA"
+        puts "========================================"
+        puts ruta
+        puts "========================================"
+      },
+
+      on_cancelar: -> {
+        @ventana.present
+      }
+    )
+
+    @selector_carpeta.mostrar
+  end
+
+  # ============================================================
+  # GUARDAR
+  # ============================================================
+
   def guardar
+
     nombre = @nombre_entry.text.strip
 
     if nombre.empty?
-      mostrar_error("Debes introducir un nombre de archivo.")
+      mostrar_error(
+        "Debes introducir un nombre para el archivo."
+      )
+      return
+    end
+
+    if @carpeta_destino.nil?
+      mostrar_error(
+        "Debes seleccionar una carpeta de destino."
+      )
       return
     end
 
     nombre += ".pdf" unless nombre.downcase.end_with?(".pdf")
 
-    dialogo = Gtk::FileChooserNative.new(
-      "Guardar informe",
-      @ventana,
-      :save,
-      "Guardar",
-      "Cancelar"
+    ruta_destino = File.join(
+      @carpeta_destino,
+      nombre
     )
 
-    dialogo.current_name = nombre
-
-    dialogo.signal_connect("response") do |_, respuesta|
-
-      if respuesta == :accept
-
-        archivo = dialogo.file
-
-        if archivo.nil?
-          mostrar_error("No se ha seleccionado una ubicación.")
-        else
-          ruta_destino = archivo.path
-
-          guardar_archivo(ruta_destino)
-        end
-
-      else
-        puts "Guardado cancelado"
-      end
-
-      dialogo.destroy
-    end
-
-    dialogo.show
+    guardar_archivo(ruta_destino)
   end
+
+  # ============================================================
+  # COPIAR PDF
+  # ============================================================
 
   def guardar_archivo(ruta_destino)
 
@@ -121,9 +202,13 @@ class GuardarInformeView
         ruta_destino
       )
 
+      unless File.exist?(ruta_destino)
+        raise "El archivo no se ha creado."
+      end
+
       puts
       puts "========================================"
-      puts "INFORME GUARDADO"
+      puts "INFORME GUARDADO CORRECTAMENTE"
       puts "========================================"
       puts "Origen:"
       puts @ruta_origen
@@ -131,8 +216,7 @@ class GuardarInformeView
       puts "Destino:"
       puts ruta_destino
       puts
-      puts "Tamaño:"
-      puts File.size(ruta_destino)
+      puts "Tamaño: #{File.size(ruta_destino)} bytes"
       puts "========================================"
 
       @ventana.close
@@ -142,18 +226,22 @@ class GuardarInformeView
     rescue StandardError => e
 
       puts
+      puts "========================================"
       puts "ERROR AL GUARDAR"
+      puts "========================================"
       puts e.class
       puts e.message
-      puts e.backtrace
-      puts
+      puts "========================================"
 
       mostrar_error(
         "No se ha podido guardar el informe.\n\n#{e.message}"
       )
-
     end
   end
+
+  # ============================================================
+  # ERROR
+  # ============================================================
 
   def mostrar_error(mensaje)
 
@@ -173,3 +261,4 @@ class GuardarInformeView
   end
 
 end
+

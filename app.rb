@@ -2,7 +2,7 @@ require "bundler/setup"
 require "gtk4"
 require "yaml"
 require "tmpdir"
-
+require_relative "app/views/selector_carpeta_view"
 require_relative "app/models/campo_informe"
 require_relative "app/models/tipo_informe"
 
@@ -161,14 +161,21 @@ class GeneradorInformes
       nombre_sugerido: nombre,
 
       on_guardado: ->(ruta_guardada) {
+
+        puts
+        puts "Mostrando resultado de guardado:"
+        puts ruta_guardada
+        puts
+
         mostrar_resultado(
-          "Informe guardado",
-          "El informe se ha guardado correctamente.\n\n#{ruta_guardada}"
+          "Informe guardado correctamente",
+          "El informe se ha guardado correctamente.\n\n" \
+            "Ubicación:\n#{ruta_guardada}"
         )
       },
 
       on_cancelar: -> {
-        mostrar_ventana_principal(@app)
+        @ventana_principal.mostrar
       }
     )
 
@@ -181,8 +188,13 @@ class GeneradorInformes
       @app,
       titulo: titulo,
       mensaje: mensaje,
+
       on_aceptar: -> {
+
+        puts "Cerrando pantalla de resultado"
+
         @resultado_view.cerrar
+        @resultado_view = nil
 
         @ventana_principal.mostrar
       }
