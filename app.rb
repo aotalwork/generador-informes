@@ -1,15 +1,25 @@
 require "bundler/setup"
 require "gtk4"
+require "yaml"
+require "tmpdir"
 
 require_relative "app/models/campo_informe"
 require_relative "app/models/tipo_informe"
 
 require_relative "app/services/tipo_informe_service"
+require_relative "app/services/generador_pdf_service"
 
 require_relative "app/controllers/nuevo_informe_controller"
 
 require_relative "app/views/main_window_view"
 require_relative "app/views/nuevo_informe_view"
+require_relative "app/views/formulario_informe_view"
+require_relative "app/views/cargar_informe_view"
+require_relative "app/views/informe_cargado_view"
+require_relative "app/views/generar_informe_view"
+require_relative "app/views/guardar_informe_view"
+require_relative "app/views/firmar_informe_view"
+require_relative "app/views/resultado_view"
 
 
 class GeneradorInformes
@@ -80,6 +90,7 @@ class GeneradorInformes
 
 
   def tipo_seleccionado(tipo)
+
     @ventana_formulario = FormularioInformeView.new(
       @app,
       tipo,
@@ -94,6 +105,89 @@ class GeneradorInformes
     )
 
     @ventana_formulario.mostrar
+  end
+
+
+  def generar_informe(tipo, datos)
+
+    puts
+    puts "========================================"
+    puts "GENERANDO INFORME"
+    puts "========================================"
+    puts "Tipo: #{tipo.nombre}"
+    puts "Datos:"
+    puts datos.inspect
+    puts
+
+    ruta = File.join(
+      Dir.tmpdir,
+      "informe-#{tipo.id}-#{Time.now.strftime("%Y%m%d%H%M%S")}.pdf"
+    )
+
+    begin
+
+      GeneradorPdfService
+        .new(tipo, datos)
+        .generar(ruta)
+
+      puts "PDF generado correctamente:"
+      puts ruta
+      puts "Tamaño: #{File.size(ruta)} bytes"
+      puts "========================================"
+
+      mostrar_resultado(
+        "Informe generado",
+        "El informe se ha generado correctamente.\n\n#{ruta}"
+      )
+
+    rescue StandardError => e
+
+      puts
+      puts "ERROR GENERANDO INFORME"
+      puts e.class
+      puts e.message
+      puts e.backtrace
+      puts
+
+      mostrar_error(
+        "No se ha podido generar el informe.\n\n#{e.message}"
+      )
+
+    end
+  end
+
+  def mostrar_resultado(titulo, mensaje)
+
+    @resultado_view = ResultadoView.new(
+      @app,
+      titulo: titulo,
+      mensaje: mensaje,
+      on_aceptar: -> {
+        @resultado_view.cerrar
+
+        @ventana_principal.mostrar
+      }
+    )
+
+    @resultado_view.mostrar
+  end
+
+
+  def mostrar_error(mensaje)
+
+    dialogo = Gtk::MessageDialog.new(
+      transient_for: nil,
+      modal: true,
+      message_type: :error,
+      buttons_type: :close,
+      text: mensaje
+    )
+
+    dialogo.signal_connect("response") do
+      dialogo.close
+    end
+
+    dialogo.present
   end
 
 

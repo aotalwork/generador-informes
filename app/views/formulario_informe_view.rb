@@ -35,6 +35,7 @@ class FormularioInformeView
     titulo.add_css_class("title-1")
 
     descripcion = Gtk::Label.new(@tipo.descripcion)
+    descripcion.wrap = true
 
     principal.append(titulo)
     principal.append(descripcion)
@@ -42,7 +43,6 @@ class FormularioInformeView
     separador = Gtk::Separator.new(:horizontal)
     principal.append(separador)
 
-    # Zona de formulario
     formulario = Gtk::Box.new(:vertical, 12)
 
     @tipo.campos.each do |campo|
@@ -102,11 +102,12 @@ class FormularioInformeView
 
   def crear_control(campo)
     case campo.tipo
+
     when "texto"
       Gtk::Entry.new
 
     when "textarea"
-      Gtk::TextView.new
+      crear_textarea
 
     when "fecha"
       Gtk::Entry.new.tap do |entry|
@@ -135,6 +136,23 @@ class FormularioInformeView
     end
   end
 
+  def crear_textarea
+    contenedor = Gtk::ScrolledWindow.new
+
+    contenedor.set_min_content_height(120)
+    contenedor.set_min_content_width(400)
+
+    text_view = Gtk::TextView.new
+
+    text_view.wrap_mode = :word_char
+    text_view.vexpand = true
+    text_view.hexpand = true
+
+    contenedor.child = text_view
+
+    contenedor
+  end
+
   def obtener_datos
     datos = {}
 
@@ -152,12 +170,13 @@ class FormularioInformeView
 
   def leer_control(control, tipo)
     case tipo
+
     when "texto", "fecha"
       control.text
 
     when "textarea"
-      buffer = control.buffer
-      buffer.text
+      text_view = control.child
+      text_view.buffer.text
 
     when "numero"
       control.value
