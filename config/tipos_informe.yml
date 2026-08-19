@@ -1,0 +1,54 @@
+tipos:
+  - id: ventas
+    nombre: Informe de ventas
+    descripcion: Informe de ventas
+    version: 1
+    activo: true
+
+    campos:
+      - id: fecha_inicio
+        nombre: Fecha de inicio
+        tipo: fecha
+        obligatorio: true
+
+      - id: fecha_fin
+        nombre: Fecha de fin
+        tipo: fecha
+        obligatorio: true
+
+      - id: responsable
+        nombre: Responsable
+        tipo: texto
+        obligatorio: true
+
+      - id: observaciones
+        nombre: Observaciones
+        tipo: textarea
+        obligatorio: false
+
+  - id: clientes
+    nombre: Informe de clientes
+    descripcion: Informe de clientes
+    version: 1
+    activo: true
+
+    campos:
+      - id: nombre
+        nombre: Nombre del cliente
+        tipo: texto
+        obligatorio: true
+
+      - id: email
+        nombre: Email
+        tipo: texto
+        obligatorio: true
+
+      - id: telefono
+        nombre: Teléfono
+        tipo: texto
+        obligatorio: false
+
+      - id: observaciones
+        nombre: Observaciones
+        tipo: textarea
+        obligatorio: false

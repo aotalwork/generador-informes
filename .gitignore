@@ -1,0 +1,9 @@
+.bundle/
+.idea/
+.vscode/
+.env
+*.sqlite3
+*.sqlite3-journal
+log/*
+data/*
+reports/*
