@@ -133,12 +133,8 @@ class GeneradorInformes
       puts "PDF generado correctamente:"
       puts ruta
       puts "Tamaño: #{File.size(ruta)} bytes"
-      puts "========================================"
 
-      mostrar_resultado(
-        "Informe generado",
-        "El informe se ha generado correctamente.\n\n#{ruta}"
-      )
+      abrir_guardar_informe(tipo, ruta)
 
     rescue StandardError => e
 
@@ -152,8 +148,31 @@ class GeneradorInformes
       mostrar_error(
         "No se ha podido generar el informe.\n\n#{e.message}"
       )
-
     end
+  end
+
+  def abrir_guardar_informe(tipo, ruta)
+
+    nombre = "informe-#{tipo.id}.pdf"
+
+    @ventana_guardar = GuardarInformeView.new(
+      @app,
+      ruta_origen: ruta,
+      nombre_sugerido: nombre,
+
+      on_guardado: ->(ruta_guardada) {
+        mostrar_resultado(
+          "Informe guardado",
+          "El informe se ha guardado correctamente.\n\n#{ruta_guardada}"
+        )
+      },
+
+      on_cancelar: -> {
+        mostrar_ventana_principal(@app)
+      }
+    )
+
+    @ventana_guardar.mostrar
   end
 
   def mostrar_resultado(titulo, mensaje)
