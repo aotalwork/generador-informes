@@ -1,0 +1,261 @@
+
+    /* ==========================================================
+       GENERADOR DE INFORMES
+       TEMA MODERNO
+       ========================================================== */
+
+window {
+    background: #f6f7fb;
+    color: #1f2937;
+}
+
+/* ----------------------------------------------------------
+   CONTENEDORES
+   ---------------------------------------------------------- */
+
+.main-container {
+    padding: 32px;
+}
+
+.content-container {
+    padding: 28px;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.card:hover {
+    background: #fafbff;
+}
+
+/* ----------------------------------------------------------
+   CABECERA
+   ---------------------------------------------------------- */
+
+.page-title {
+    font-size: 30px;
+    font-weight: 700;
+}
+
+.page-subtitle {
+    font-size: 15px;
+    color: #667085;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.small-label {
+    font-size: 13px;
+    color: #667085;
+}
+
+/* ----------------------------------------------------------
+   TARJETAS DE ACCIÓN
+   ---------------------------------------------------------- */
+
+.action-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 26px;
+}
+
+.action-card-title {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.action-card-description {
+    font-size: 14px;
+    color: #667085;
+}
+
+/* ----------------------------------------------------------
+   FORMULARIOS
+   ---------------------------------------------------------- */
+
+.form-container {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 26px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+entry {
+    min-height: 42px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: 9px;
+}
+
+entry:focus {
+    border-radius: 9px;
+}
+
+textview {
+    background: #ffffff;
+    border-radius: 9px;
+}
+
+spinbutton {
+    min-height: 42px;
+    border-radius: 9px;
+}
+
+/* ----------------------------------------------------------
+   DESPLEGABLES
+   ---------------------------------------------------------- */
+
+dropdown {
+    min-height: 42px;
+}
+
+combobox {
+    min-height: 42px;
+}
+
+/* ----------------------------------------------------------
+   BOTONES
+   ---------------------------------------------------------- */
+
+button {
+    min-height: 40px;
+    padding-left: 18px;
+    padding-right: 18px;
+    border-radius: 9px;
+    font-weight: 600;
+}
+
+button.suggested-action {
+    min-height: 44px;
+    padding-left: 22px;
+    padding-right: 22px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+button.destructive-action {
+    min-height: 40px;
+    border-radius: 9px;
+}
+
+button.secondary {
+    min-height: 40px;
+    border-radius: 9px;
+}
+
+/* ----------------------------------------------------------
+   LISTAS
+   ---------------------------------------------------------- */
+
+listbox {
+    background: transparent;
+}
+
+listbox row {
+    padding: 12px;
+    border-radius: 10px;
+}
+
+listbox row:hover {
+    background: #eef2ff;
+}
+
+listbox row:selected {
+    background: #4f46e5;
+    color: #ffffff;
+}
+
+/* ----------------------------------------------------------
+   ESTADOS
+   ---------------------------------------------------------- */
+
+.success-title {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.success-message {
+    font-size: 15px;
+    color: #475467;
+}
+
+.error-title {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.error-message {
+    font-size: 15px;
+    color: #475467;
+}
+
+/* ----------------------------------------------------------
+   GUARDAR INFORME
+   ---------------------------------------------------------- */
+
+.path-label {
+    background: #f2f4f7;
+    border-radius: 9px;
+    padding: 11px;
+}
+
+.save-section {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+}
+
+/* ----------------------------------------------------------
+   SEPARADORES
+   ---------------------------------------------------------- */
+
+separator {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+/* ----------------------------------------------------------
+   SCROLL
+   ---------------------------------------------------------- */
+
+scrolledwindow {
+    border-radius: 12px;
+}
+
+/* ----------------------------------------------------------
+   CHECKBOX
+   ---------------------------------------------------------- */
+
+checkbutton {
+    min-height: 36px;
+}
+
+/* ----------------------------------------------------------
+   TÍTULOS GTK
+   ---------------------------------------------------------- */
+
+label.title-1 {
+    font-size: 30px;
+    font-weight: 700;
+}
+
+label.title-2 {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+label.title-3 {
+    font-size: 18px;
+    font-weight: 700;
+}
+
