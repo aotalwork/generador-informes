@@ -43,36 +43,34 @@ class GeneradorInformes
   end
 
 
+  # ==========================================================
+  # ESTILOS
+  # ==========================================================
 
+  def cargar_estilos
+    provider = Gtk::CssProvider.new
 
-def cargar_estilos
+    ruta = File.expand_path(
+      "app/styles/app.css",
+      __dir__
+    )
 
-  provider = Gtk::CssProvider.new
+    provider.load_from_path(ruta)
 
-  ruta = File.expand_path(
-    "app/styles/app.css",
-    __dir__
-  )
-
-  provider.load_from_path(ruta)
-
-  Gtk::StyleContext.add_provider_for_display(
-    Gdk::Display.default,
-    provider,
-    800
-  )
-
-end
-
-
-
-
-
-
+    Gtk::StyleContext.add_provider_for_display(
+      Gdk::Display.default,
+      provider,
+      800
+    )
+  end
 
 
   private
 
+
+  # ==========================================================
+  # VENTANA PRINCIPAL
+  # ==========================================================
 
   def mostrar_ventana_principal(application)
 
@@ -95,6 +93,10 @@ end
     @ventana_principal.mostrar
   end
 
+
+  # ==========================================================
+  # NUEVO INFORME
+  # ==========================================================
 
   def abrir_nuevo_informe(application)
 
@@ -119,6 +121,10 @@ end
   end
 
 
+  # ==========================================================
+  # TIPO DE INFORME SELECCIONADO
+  # ==========================================================
+
   def tipo_seleccionado(tipo)
 
     @ventana_formulario = FormularioInformeView.new(
@@ -138,55 +144,9 @@ end
   end
 
 
-  def generar_informe(tipo, datos)
-
-    puts
-    puts "========================================"
-    puts "GENERANDO INFORME"
-    puts "========================================"
-    puts "Tipo: #{tipo.nombre}"
-    puts "Datos:"
-    puts datos.inspect
-    puts
-
-    ruta = File.join(
-      Dir.tmpdir,
-      "informe-#{tipo.id}-#{Time.now.strftime("%Y%m%d%H%M%S")}.pdf"
-    )
-
-    begin
-
-      puts "[1] Creando generador PDF..."
-
-      GeneradorPdfService
-        .new(tipo, datos)
-        .generar(ruta)
-
-      puts "[2] PDF generado correctamente"
-      puts "[3] Ruta: #{ruta}"
-      puts "[4] Tamaño: #{File.size(ruta)} bytes"
-
-      abrir_guardar_informe(tipo, ruta)
-
-      puts "[5] GuardarInformeView creada"
-
-    rescue StandardError => e
-
-      puts
-      puts "========================================"
-      puts "ERROR GENERANDO INFORME"
-      puts "========================================"
-      puts "Clase: #{e.class}"
-      puts "Mensaje: #{e.message}"
-      puts
-      puts e.backtrace
-      puts
-
-      mostrar_error(
-        "No se ha podido generar el informe.\n\n#{e.message}"
-      )
-    end
-  end
+  # ==========================================================
+  # GENERAR INFORME
+  # ==========================================================
 
   def generar_informe(tipo, datos)
 
@@ -216,9 +176,11 @@ end
       puts "[3] Ruta: #{ruta}"
       puts "[4] Tamaño: #{File.size(ruta)} bytes"
 
+      puts "[5] Abriendo pantalla GuardarInformeView..."
+
       abrir_guardar_informe(tipo, ruta)
 
-      puts "[5] GuardarInformeView creada"
+      puts "[6] GuardarInformeView creada"
 
     rescue StandardError => e
 
@@ -226,10 +188,20 @@ end
       puts "========================================"
       puts "ERROR GENERANDO INFORME"
       puts "========================================"
-      puts "Clase: #{e.class}"
-      puts "Mensaje: #{e.message}"
+
+      puts "Clase:"
+      puts e.class
+
       puts
+
+      puts "Mensaje:"
+      puts e.message
+
+      puts
+
+      puts "Backtrace:"
       puts e.backtrace
+
       puts
 
       mostrar_error(
@@ -237,12 +209,69 @@ end
       )
     end
   end
+
+
+  # ==========================================================
+  # GUARDAR INFORME
+  # ==========================================================
+
+  def abrir_guardar_informe(tipo, ruta)
+
+    nombre = "informe-#{tipo.id}.pdf"
+
+    puts "[Guardar] Preparando pantalla..."
+
+    @ventana_guardar = GuardarInformeView.new(
+      @app,
+
+      ruta_origen: ruta,
+
+      nombre_sugerido: nombre,
+
+      on_guardado: ->(ruta_guardada) {
+
+        puts
+        puts "========================================"
+        puts "INFORME GUARDADO"
+        puts "========================================"
+        puts "Ruta:"
+        puts ruta_guardada
+        puts "========================================"
+        puts
+
+        mostrar_resultado(
+          "Informe guardado correctamente",
+
+          "El informe se ha guardado correctamente.\n\n" \
+            "Ubicación:\n#{ruta_guardada}"
+        )
+      },
+
+      on_cancelar: -> {
+
+        puts "[Guardar] Operación cancelada"
+
+        @ventana_guardar.hide
+
+        @ventana_principal.mostrar
+      }
+    )
+
+    @ventana_guardar.mostrar
+  end
+
+
+  # ==========================================================
+  # RESULTADO
+  # ==========================================================
 
   def mostrar_resultado(titulo, mensaje)
 
     @resultado_view = ResultadoView.new(
       @app,
+
       titulo: titulo,
+
       mensaje: mensaje,
 
       on_aceptar: -> {
@@ -259,6 +288,10 @@ end
     @resultado_view.mostrar
   end
 
+
+  # ==========================================================
+  # ERROR
+  # ==========================================================
 
   def mostrar_error(mensaje)
 
@@ -277,6 +310,10 @@ end
     dialogo.present
   end
 
+
+  # ==========================================================
+  # CARGAR INFORME
+  # ==========================================================
 
   def cargar_informe
     puts "Cargar informe"

@@ -301,17 +301,7 @@ class FormularioInformeView
   def leer_fecha(calendario)
     fecha = calendario.date
 
-    # Gtk::Calendar devuelve GLib::DateTime.
-    # No usamos strftime, day, month ni year directamente
-    # porque no están expuestos como métodos Ruby normales
-    # en esta versión de gobject-introspection.
-
-    format(
-      "%04d-%02d-%02d",
-      fecha.get_year,
-      fecha.get_month,
-      fecha.get_day_of_month
-    )
+    fecha.to_s
   end
 
   # ============================================================
