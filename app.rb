@@ -156,22 +156,29 @@ end
 
     begin
 
+      puts "[1] Creando generador PDF..."
+
       GeneradorPdfService
         .new(tipo, datos)
         .generar(ruta)
 
-      puts "PDF generado correctamente:"
-      puts ruta
-      puts "Tamaño: #{File.size(ruta)} bytes"
+      puts "[2] PDF generado correctamente"
+      puts "[3] Ruta: #{ruta}"
+      puts "[4] Tamaño: #{File.size(ruta)} bytes"
 
       abrir_guardar_informe(tipo, ruta)
+
+      puts "[5] GuardarInformeView creada"
 
     rescue StandardError => e
 
       puts
+      puts "========================================"
       puts "ERROR GENERANDO INFORME"
-      puts e.class
-      puts e.message
+      puts "========================================"
+      puts "Clase: #{e.class}"
+      puts "Mensaje: #{e.message}"
+      puts
       puts e.backtrace
       puts
 
@@ -181,35 +188,54 @@ end
     end
   end
 
-  def abrir_guardar_informe(tipo, ruta)
+  def generar_informe(tipo, datos)
 
-    nombre = "informe-#{tipo.id}.pdf"
+    puts
+    puts "========================================"
+    puts "GENERANDO INFORME"
+    puts "========================================"
+    puts "Tipo: #{tipo.nombre}"
+    puts "Datos:"
+    puts datos.inspect
+    puts
 
-    @ventana_guardar = GuardarInformeView.new(
-      @app,
-      ruta_origen: ruta,
-      nombre_sugerido: nombre,
-
-      on_guardado: ->(ruta_guardada) {
-
-        puts
-        puts "Mostrando resultado de guardado:"
-        puts ruta_guardada
-        puts
-
-        mostrar_resultado(
-          "Informe guardado correctamente",
-          "El informe se ha guardado correctamente.\n\n" \
-            "Ubicación:\n#{ruta_guardada}"
-        )
-      },
-
-      on_cancelar: -> {
-        @ventana_principal.mostrar
-      }
+    ruta = File.join(
+      Dir.tmpdir,
+      "informe-#{tipo.id}-#{Time.now.strftime("%Y%m%d%H%M%S")}.pdf"
     )
 
-    @ventana_guardar.mostrar
+    begin
+
+      puts "[1] Creando generador PDF..."
+
+      GeneradorPdfService
+        .new(tipo, datos)
+        .generar(ruta)
+
+      puts "[2] PDF generado correctamente"
+      puts "[3] Ruta: #{ruta}"
+      puts "[4] Tamaño: #{File.size(ruta)} bytes"
+
+      abrir_guardar_informe(tipo, ruta)
+
+      puts "[5] GuardarInformeView creada"
+
+    rescue StandardError => e
+
+      puts
+      puts "========================================"
+      puts "ERROR GENERANDO INFORME"
+      puts "========================================"
+      puts "Clase: #{e.class}"
+      puts "Mensaje: #{e.message}"
+      puts
+      puts e.backtrace
+      puts
+
+      mostrar_error(
+        "No se ha podido generar el informe.\n\n#{e.message}"
+      )
+    end
   end
 
   def mostrar_resultado(titulo, mensaje)

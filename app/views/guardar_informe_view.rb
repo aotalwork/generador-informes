@@ -97,9 +97,7 @@ class GuardarInformeView
       label: "Guardar"
     )
 
-    boton_guardar.add_css_class(
-      "suggested-action"
-    )
+    boton_guardar.add_css_class("secondary")
 
     boton_cancelar.signal_connect("clicked") do
       @ventana.close

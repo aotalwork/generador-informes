@@ -24,10 +24,6 @@ class FormularioInformeView
     @ventana.title = @tipo.nombre
     @ventana.set_default_size(700, 650)
 
-    # ==========================================================
-    # CONTENEDOR PRINCIPAL
-    # ==========================================================
-
     principal = Gtk::Box.new(:vertical, 10)
 
     principal.margin_top = 30
@@ -42,25 +38,16 @@ class FormularioInformeView
     titulo = Gtk::Label.new(@tipo.nombre)
 
     titulo.add_css_class("page-title")
-
     titulo.halign = :start
-
-    # ==========================================================
-    # DESCRIPCIÓN
-    # ==========================================================
 
     descripcion = Gtk::Label.new(@tipo.descripcion)
 
     descripcion.wrap = true
-    descripcion.halign = :start
     descripcion.add_css_class("page-subtitle")
+    descripcion.halign = :start
 
     principal.append(titulo)
     principal.append(descripcion)
-
-    # ==========================================================
-    # SEPARADOR
-    # ==========================================================
 
     separador = Gtk::Separator.new(:horizontal)
 
@@ -100,7 +87,6 @@ class FormularioInformeView
 
     scroll.vexpand = true
     scroll.hexpand = true
-
     scroll.child = formulario
 
     principal.append(scroll)
@@ -122,6 +108,7 @@ class FormularioInformeView
     boton_volver.hexpand = true
     boton_generar.hexpand = true
 
+    # Ambos botones tienen exactamente el mismo estilo
     boton_volver.add_css_class("secondary")
     boton_generar.add_css_class("secondary")
 
@@ -130,7 +117,7 @@ class FormularioInformeView
     # ==========================================================
 
     boton_volver.signal_connect("clicked") do
-      @ventana.close
+      @ventana.hide
       @on_volver.call
     end
 
@@ -141,10 +128,14 @@ class FormularioInformeView
     boton_generar.signal_connect("clicked") do
       datos = obtener_datos
 
-      if validar(datos)
-        @ventana.close
-        @on_generar.call(datos)
-      end
+      next unless validar(datos)
+
+      # Importante:
+      # No destruimos la ventana con close.
+      # La ocultamos antes de pasar a la siguiente vista.
+      @ventana.hide
+
+      @on_generar.call(datos)
     end
 
     botones.append(boton_volver)
@@ -160,50 +151,26 @@ class FormularioInformeView
   end
 
   # ============================================================
-  # CREAR CONTROL SEGÚN TIPO
+  # CREAR CONTROL
   # ============================================================
 
   def crear_control(campo)
     case campo.tipo
 
-      # ----------------------------------------------------------
-      # TEXTO
-      # ----------------------------------------------------------
-
     when "texto"
       crear_texto
-
-      # ----------------------------------------------------------
-      # TEXTAREA
-      # ----------------------------------------------------------
 
     when "textarea"
       crear_textarea
 
-      # ----------------------------------------------------------
-      # FECHA
-      # ----------------------------------------------------------
-
     when "fecha"
       crear_fecha
-
-      # ----------------------------------------------------------
-      # NÚMERO
-      # ----------------------------------------------------------
 
     when "numero"
       crear_numero
 
-      # ----------------------------------------------------------
-      # CHECKBOX
-      # ----------------------------------------------------------
-
     when "checkbox"
-      crear_checkbox
-
-      # ----------------------------------------------------------
-      # TIPO DESCONOCIDO
-      # ----------------------------------------------------------
+      Gtk::CheckButton.new
 
     else
       Gtk::Entry.new
@@ -211,7 +178,7 @@ class FormularioInformeView
   end
 
   # ============================================================
-  # CAMPO DE TEXTO
+  # TEXTO
   # ============================================================
 
   def crear_texto
@@ -223,7 +190,7 @@ class FormularioInformeView
   end
 
   # ============================================================
-  # CAMPO NUMÉRICO
+  # NÚMERO
   # ============================================================
 
   def crear_numero
@@ -248,7 +215,7 @@ class FormularioInformeView
   end
 
   # ============================================================
-  # CAMPO FECHA
+  # FECHA
   # ============================================================
 
   def crear_fecha
@@ -257,16 +224,6 @@ class FormularioInformeView
     calendario.hexpand = true
 
     calendario
-  end
-
-  # ============================================================
-  # CHECKBOX
-  # ============================================================
-
-  def crear_checkbox
-    control = Gtk::CheckButton.new
-
-    control
   end
 
   # ============================================================
@@ -316,46 +273,21 @@ class FormularioInformeView
   def leer_control(control, tipo)
     case tipo
 
-      # ----------------------------------------------------------
-      # TEXTO
-      # ----------------------------------------------------------
-
     when "texto"
       control.text
-
-      # ----------------------------------------------------------
-      # FECHA
-      # ----------------------------------------------------------
 
     when "fecha"
       leer_fecha(control)
 
-      # ----------------------------------------------------------
-      # TEXTAREA
-      # ----------------------------------------------------------
-
     when "textarea"
       text_view = control.child
-
       text_view.buffer.text
-
-      # ----------------------------------------------------------
-      # NÚMERO
-      # ----------------------------------------------------------
 
     when "numero"
       control.value
 
-      # ----------------------------------------------------------
-      # CHECKBOX
-      # ----------------------------------------------------------
-
     when "checkbox"
       control.active
-
-      # ----------------------------------------------------------
-      # DESCONOCIDO
-      # ----------------------------------------------------------
 
     else
       control.respond_to?(:text) ? control.text : nil
@@ -369,7 +301,17 @@ class FormularioInformeView
   def leer_fecha(calendario)
     fecha = calendario.date
 
-    fecha.format("%d/%m/%Y")
+    # Gtk::Calendar devuelve GLib::DateTime.
+    # No usamos strftime, day, month ni year directamente
+    # porque no están expuestos como métodos Ruby normales
+    # en esta versión de gobject-introspection.
+
+    format(
+      "%04d-%02d-%02d",
+      fecha.get_year,
+      fecha.get_month,
+      fecha.get_day_of_month
+    )
   end
 
   # ============================================================
