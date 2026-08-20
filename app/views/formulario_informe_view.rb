@@ -109,9 +109,7 @@ class FormularioInformeView
       crear_textarea
 
     when "fecha"
-      Gtk::Entry.new.tap do |entry|
-        entry.placeholder_text = "DD/MM/AAAA"
-      end
+      Gtk::Calendar.new
 
     when "numero"
       Gtk::SpinButton.new(

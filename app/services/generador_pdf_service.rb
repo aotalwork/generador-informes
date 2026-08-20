@@ -78,7 +78,7 @@ class GeneradorPdfService
     pdf.move_down 10
 
     pdf.text(
-      "Generador de Informes",
+      "Generador de Informes IML",
       size: 9,
       align: :center
     )

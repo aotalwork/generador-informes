@@ -22,6 +22,7 @@ class TipoInformeService
         id: tipo.fetch("id"),
         nombre: tipo.fetch("nombre"),
         descripcion: tipo.fetch("descripcion", ""),
+        area: tipo.fetch("area", "otros"),
         version: tipo.fetch("version", 1),
         activo: tipo.fetch("activo", true),
         campos: campos

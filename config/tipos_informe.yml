@@ -1,54 +1,642 @@
 tipos:
-  - id: ventas
-    nombre: Informe de ventas
-    descripcion: Informe de ventas
+
+  # ============================================================
+  # CLÍNICA FORENSE
+  # ============================================================
+
+  - id: lesiones
+    nombre: Informe de lesiones
+    descripcion: Valoración médico-forense de lesiones.
+    area: clinica_forense
     version: 1
     activo: true
 
+    fases:
+      - inicial
+      - seguimiento
+      - definitivo
+      - complementario
+
     campos:
-      - id: fecha_inicio
-        nombre: Fecha de inicio
+      - id: fecha_hecho
+        nombre: Fecha del hecho
         tipo: fecha
+        obligatorio: false
+
+      - id: mecanismo_lesional
+        nombre: Mecanismo lesional
+        tipo: textarea
         obligatorio: true
 
-      - id: fecha_fin
-        nombre: Fecha de fin
-        tipo: fecha
+      - id: lesiones
+        nombre: Lesiones
+        tipo: textarea
         obligatorio: true
 
-      - id: responsable
-        nombre: Responsable
-        tipo: texto
-        obligatorio: true
-
-      - id: observaciones
-        nombre: Observaciones
+      - id: tratamiento
+        nombre: Tratamiento recibido
         tipo: textarea
         obligatorio: false
 
-  - id: clientes
-    nombre: Informe de clientes
-    descripcion: Informe de clientes
+      - id: pruebas_complementarias
+        nombre: Pruebas complementarias
+        tipo: textarea
+        obligatorio: false
+
+      - id: evolucion
+        nombre: Evolución
+        tipo: textarea
+        obligatorio: false
+
+      - id: tiempo_curacion
+        nombre: Tiempo de curación
+        tipo: numero
+        obligatorio: false
+
+      - id: secuelas
+        nombre: Secuelas
+        tipo: textarea
+        obligatorio: false
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  - id: valoracion_dano_corporal
+    nombre: Informe de valoración del daño corporal
+    descripcion: Valoración médico-forense de perjuicios, lesiones y secuelas.
+    area: clinica_forense
     version: 1
     activo: true
 
+    fases:
+      - inicial
+      - definitivo
+      - complementario
+
     campos:
-      - id: nombre
-        nombre: Nombre del cliente
-        tipo: texto
+      - id: lesiones
+        nombre: Lesiones
+        tipo: textarea
         obligatorio: true
 
-      - id: email
-        nombre: Email
-        tipo: texto
-        obligatorio: true
-
-      - id: telefono
-        nombre: Teléfono
-        tipo: texto
-        obligatorio: false
-
-      - id: observaciones
-        nombre: Observaciones
+      - id: periodo_curacion
+        nombre: Periodo de curación
         tipo: textarea
         obligatorio: false
+
+      - id: perjuicio_personal
+        nombre: Perjuicio personal
+        tipo: textarea
+        obligatorio: false
+
+      - id: secuelas
+        nombre: Secuelas
+        tipo: textarea
+        obligatorio: false
+
+      - id: perjuicio_estetico
+        nombre: Perjuicio estético
+        tipo: textarea
+        obligatorio: false
+
+      - id: limitaciones_funcionales
+        nombre: Limitaciones funcionales
+        tipo: textarea
+        obligatorio: false
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  - id: accidente_trafico
+    nombre: Informe médico-forense por accidente de tráfico
+    descripcion: Valoración de lesiones derivadas de un siniestro de tráfico.
+    area: clinica_forense
+    version: 1
+    activo: true
+
+    fases:
+      - inicial
+      - seguimiento
+      - definitivo
+      - complementario
+
+    campos:
+      - id: fecha_accidente
+        nombre: Fecha del accidente
+        tipo: fecha
+        obligatorio: true
+
+      - id: tipo_accidente
+        nombre: Tipo de accidente
+        tipo: texto
+        obligatorio: false
+
+      - id: lesiones
+        nombre: Lesiones
+        tipo: textarea
+        obligatorio: true
+
+      - id: tratamiento
+        nombre: Tratamiento
+        tipo: textarea
+        obligatorio: false
+
+      - id: evolucion
+        nombre: Evolución
+        tipo: textarea
+        obligatorio: false
+
+      - id: secuelas
+        nombre: Secuelas
+        tipo: textarea
+        obligatorio: false
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  - id: violencia_genero
+    nombre: Informe médico-forense de violencia de género
+    descripcion: Valoración médico-forense relacionada con violencia de género.
+    area: clinica_forense
+    version: 1
+    activo: true
+
+    fases:
+      - inicial
+      - seguimiento
+      - definitivo
+      - complementario
+
+    campos:
+      - id: antecedentes
+        nombre: Antecedentes
+        tipo: textarea
+        obligatorio: false
+
+      - id: relato_hechos
+        nombre: Relato de los hechos
+        tipo: textarea
+        obligatorio: true
+
+      - id: lesiones
+        nombre: Lesiones
+        tipo: textarea
+        obligatorio: true
+
+      - id: tratamiento
+        nombre: Tratamiento
+        tipo: textarea
+        obligatorio: false
+
+      - id: evolucion
+        nombre: Evolución
+        tipo: textarea
+        obligatorio: false
+
+      - id: secuelas
+        nombre: Secuelas
+        tipo: textarea
+        obligatorio: false
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  - id: delito_libertad_sexual
+    nombre: Informe médico-forense por delito contra la libertad sexual
+    descripcion: Valoración médico-forense relacionada con un posible delito contra la libertad sexual.
+    area: clinica_forense
+    version: 1
+    activo: true
+
+    fases:
+      - inicial
+      - complementario
+      - definitivo
+
+    campos:
+      - id: fecha_hecho
+        nombre: Fecha del hecho
+        tipo: fecha
+        obligatorio: false
+
+      - id: relato
+        nombre: Relato
+        tipo: textarea
+        obligatorio: true
+
+      - id: exploracion
+        nombre: Exploración médico-forense
+        tipo: textarea
+        obligatorio: true
+
+      - id: lesiones
+        nombre: Lesiones
+        tipo: textarea
+        obligatorio: false
+
+      - id: muestras
+        nombre: Muestras obtenidas
+        tipo: textarea
+        obligatorio: false
+
+      - id: hallazgos
+        nombre: Hallazgos
+        tipo: textarea
+        obligatorio: false
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  - id: reconocimiento_detenido
+    nombre: Informe de reconocimiento de persona detenida
+    descripcion: Reconocimiento médico-forense de una persona detenida.
+    area: clinica_forense
+    version: 1
+    activo: true
+
+    fases:
+      - inicial
+      - complementario
+
+    campos:
+      - id: fecha_reconocimiento
+        nombre: Fecha del reconocimiento
+        tipo: fecha
+        obligatorio: true
+
+      - id: estado_general
+        nombre: Estado general
+        tipo: textarea
+        obligatorio: true
+
+      - id: lesiones
+        nombre: Lesiones
+        tipo: textarea
+        obligatorio: false
+
+      - id: exploracion
+        nombre: Exploración
+        tipo: textarea
+        obligatorio: true
+
+      - id: tratamiento
+        nombre: Tratamiento o medicación
+        tipo: textarea
+        obligatorio: false
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  # ============================================================
+  # PSIQUIATRÍA FORENSE
+  # ============================================================
+
+  - id: psiquiatrico
+    nombre: Informe psiquiátrico-forense
+    descripcion: Valoración psiquiátrica en el ámbito judicial.
+    area: psiquiatria_forense
+    version: 1
+    activo: true
+
+    fases:
+      - inicial
+      - complementario
+      - definitivo
+
+    campos:
+      - id: antecedentes
+        nombre: Antecedentes
+        tipo: textarea
+        obligatorio: true
+
+      - id: historia_psiquiatrica
+        nombre: Historia psiquiátrica
+        tipo: textarea
+        obligatorio: false
+
+      - id: exploracion
+        nombre: Exploración psiquiátrica
+        tipo: textarea
+        obligatorio: true
+
+      - id: diagnostico
+        nombre: Diagnóstico
+        tipo: textarea
+        obligatorio: false
+
+      - id: tratamiento
+        nombre: Tratamiento
+        tipo: textarea
+        obligatorio: false
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  - id: imputabilidad
+    nombre: Informe de imputabilidad
+    descripcion: Valoración de las capacidades cognitivas y volitivas en relación con los hechos.
+    area: psiquiatria_forense
+    version: 1
+    activo: true
+
+    fases:
+      - inicial
+      - complementario
+      - definitivo
+
+    campos:
+      - id: antecedentes
+        nombre: Antecedentes
+        tipo: textarea
+        obligatorio: true
+
+      - id: estado_mental
+        nombre: Estado mental
+        tipo: textarea
+        obligatorio: true
+
+      - id: diagnostico
+        nombre: Diagnóstico
+        tipo: textarea
+        obligatorio: false
+
+      - id: capacidades_cognitivas
+        nombre: Capacidades cognitivas
+        tipo: textarea
+        obligatorio: true
+
+      - id: capacidades_volitivas
+        nombre: Capacidades volitivas
+        tipo: textarea
+        obligatorio: true
+
+      - id: relacion_hechos
+        nombre: Relación con los hechos
+        tipo: textarea
+        obligatorio: false
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  # ============================================================
+  # PATOLOGÍA FORENSE
+  # ============================================================
+
+  - id: autopsia
+    nombre: Informe de autopsia médico-forense
+    descripcion: Informe derivado del estudio médico-forense de un cadáver.
+    area: patologia_forense
+    version: 1
+    activo: true
+
+    fases:
+      - provisional
+      - definitivo
+      - complementario
+
+    campos:
+      - id: fecha_autopsia
+        nombre: Fecha de autopsia
+        tipo: fecha
+        obligatorio: true
+
+      - id: circunstancias
+        nombre: Circunstancias del fallecimiento
+        tipo: textarea
+        obligatorio: false
+
+      - id: examen_externo
+        nombre: Examen externo
+        tipo: textarea
+        obligatorio: true
+
+      - id: examen_interno
+        nombre: Examen interno
+        tipo: textarea
+        obligatorio: true
+
+      - id: lesiones
+        nombre: Lesiones
+        tipo: textarea
+        obligatorio: false
+
+      - id: pruebas_complementarias
+        nombre: Pruebas complementarias
+        tipo: textarea
+        obligatorio: false
+
+      - id: causa_muerte
+        nombre: Causa de la muerte
+        tipo: textarea
+        obligatorio: true
+
+      - id: mecanismo_muerte
+        nombre: Mecanismo de la muerte
+        tipo: textarea
+        obligatorio: false
+
+      - id: manera_muerte
+        nombre: Manera de la muerte
+        tipo: texto
+        obligatorio: false
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  - id: identificacion_cadaver
+    nombre: Informe de identificación de cadáver
+    descripcion: Informe sobre la identificación médico-forense de una persona fallecida.
+    area: patologia_forense
+    version: 1
+    activo: true
+
+    fases:
+      - provisional
+      - definitivo
+      - complementario
+
+    campos:
+      - id: circunstancias
+        nombre: Circunstancias del hallazgo
+        tipo: textarea
+        obligatorio: false
+
+      - id: metodos_identificacion
+        nombre: Métodos de identificación
+        tipo: textarea
+        obligatorio: true
+
+      - id: datos_antemortem
+        nombre: Datos antemortem
+        tipo: textarea
+        obligatorio: false
+
+      - id: datos_postmortem
+        nombre: Datos postmortem
+        tipo: textarea
+        obligatorio: true
+
+      - id: resultado
+        nombre: Resultado de la identificación
+        tipo: textarea
+        obligatorio: true
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  # ============================================================
+  # LABORATORIO FORENSE
+  # ============================================================
+
+  - id: toxicologico
+    nombre: Informe toxicológico-forense
+    descripcion: Análisis e interpretación de sustancias de interés médico-legal.
+    area: laboratorio_forense
+    version: 1
+    activo: true
+
+    fases:
+      - provisional
+      - definitivo
+      - complementario
+
+    campos:
+      - id: muestras
+        nombre: Muestras analizadas
+        tipo: textarea
+        obligatorio: true
+
+      - id: sustancias
+        nombre: Sustancias analizadas
+        tipo: textarea
+        obligatorio: true
+
+      - id: resultados
+        nombre: Resultados analíticos
+        tipo: textarea
+        obligatorio: true
+
+      - id: concentraciones
+        nombre: Concentraciones
+        tipo: textarea
+        obligatorio: false
+
+      - id: interpretacion
+        nombre: Interpretación
+        tipo: textarea
+        obligatorio: false
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  - id: biologico
+    nombre: Informe biológico-forense
+    descripcion: Análisis de muestras biológicas de interés médico-legal.
+    area: laboratorio_forense
+    version: 1
+    activo: true
+
+    fases:
+      - provisional
+      - definitivo
+      - complementario
+
+    campos:
+      - id: muestras
+        nombre: Muestras recibidas
+        tipo: textarea
+        obligatorio: true
+
+      - id: analisis
+        nombre: Análisis realizados
+        tipo: textarea
+        obligatorio: true
+
+      - id: resultados
+        nombre: Resultados
+        tipo: textarea
+        obligatorio: true
+
+      - id: interpretacion
+        nombre: Interpretación
+        tipo: textarea
+        obligatorio: false
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true
+
+
+  # ============================================================
+  # INFORMES TRANSVERSALES
+  # ============================================================
+
+  - id: complementario
+    nombre: Informe médico-forense complementario
+    descripcion: Ampliación de un informe médico-forense anterior.
+    area: transversal
+    version: 1
+    activo: true
+
+    fases:
+      - complementario
+
+    campos:
+      - id: informe_referencia
+        nombre: Informe de referencia
+        tipo: texto
+        obligatorio: true
+
+      - id: motivo
+        nombre: Motivo de la ampliación
+        tipo: textarea
+        obligatorio: true
+
+      - id: nueva_documentacion
+        nombre: Nueva documentación examinada
+        tipo: textarea
+        obligatorio: false
+
+      - id: nuevas_consideraciones
+        nombre: Nuevas consideraciones
+        tipo: textarea
+        obligatorio: true
+
+      - id: conclusiones
+        nombre: Conclusiones
+        tipo: textarea
+        obligatorio: true

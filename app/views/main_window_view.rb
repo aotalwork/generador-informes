@@ -24,7 +24,7 @@ class MainWindowView
   def crear_ventana
     @ventana = Gtk::ApplicationWindow.new(@application)
 
-    @ventana.title = "Generador de Informes"
+    @ventana.title = "Generador de Informes IML"
     @ventana.set_default_size(600, 450)
     @ventana.resizable = false
 
@@ -36,7 +36,7 @@ class MainWindowView
     contenedor.margin_end = 80
 
     titulo = Gtk::Label.new(
-      "GENERADOR DE INFORMES"
+      "GENERADOR DE INFORMES IML"
     )
 
     titulo.add_css_class("title-1")
