@@ -82,7 +82,7 @@ class GeneradorPdfService
     pdf.indent(85) do
 
       pdf.text(
-        "INSTITUTO DE MEDICINA LEGAL",
+        "PYR",
         size: 12,
         style: :bold
       )
@@ -90,7 +90,7 @@ class GeneradorPdfService
       pdf.move_down 3
 
       pdf.text(
-        "Generador de informes médico-forenses",
+        "Generador",
         size: 9,
         color: "667085"
       )
@@ -295,7 +295,7 @@ class GeneradorPdfService
       )
 
       pdf.text_box(
-        "Generador de Informes IML",
+        "Generador",
         at: [0, 20],
         width: pdf.bounds.width,
         height: 12,

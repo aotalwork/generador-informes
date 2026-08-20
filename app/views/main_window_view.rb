@@ -24,7 +24,7 @@ class MainWindowView
   def crear_ventana
     @ventana = Gtk::ApplicationWindow.new(@application)
 
-    @ventana.title = "Generador de Informes IML"
+    @ventana.title = "Generador PYR"
     @ventana.set_default_size(600, 500)
     @ventana.resizable = false
 
@@ -45,7 +45,7 @@ class MainWindowView
 
     logo_container = Gtk::Box.new(:horizontal, 14)
 
-    logo_container.halign = :center
+    logo_container.halign = :start
 
     logo = Gtk::Picture.new
 
@@ -57,8 +57,8 @@ class MainWindowView
 
     logo.content_fit = :contain
 
-    logo.width_request = 70
-    logo.height_request = 70
+    logo.width_request = 200
+    logo.height_request = 200
 
     logo_container.append(logo)
 
@@ -71,14 +71,14 @@ class MainWindowView
     logo_texto.valign = :center
 
     logo_titulo = Gtk::Label.new(
-      "INSTITUTO DE MEDICINA LEGAL"
+      "PYR"
     )
 
     logo_titulo.add_css_class("logo-title")
     logo_titulo.halign = :start
 
     logo_subtitulo = Gtk::Label.new(
-      "Generador de informes"
+      "Generador"
     )
 
     logo_subtitulo.add_css_class("logo-subtitle")
