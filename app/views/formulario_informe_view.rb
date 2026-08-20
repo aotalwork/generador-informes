@@ -1,5 +1,6 @@
 require "gtk4"
 require "date"
+
 class FormularioInformeView
   def initialize(application, tipo, on_volver:, on_generar:)
     @application = application
@@ -17,6 +18,10 @@ class FormularioInformeView
   end
 
   private
+
+  # ==========================================================
+  # VENTANA
+  # ==========================================================
 
   def crear_ventana
     @ventana = Gtk::ApplicationWindow.new(@application)
@@ -36,21 +41,16 @@ class FormularioInformeView
     # ==========================================================
 
     titulo = Gtk::Label.new(@tipo.nombre)
-
     titulo.add_css_class("page-title")
-    titulo.halign = :start
 
     descripcion = Gtk::Label.new(@tipo.descripcion)
-
     descripcion.wrap = true
     descripcion.add_css_class("page-subtitle")
-    descripcion.halign = :start
 
     principal.append(titulo)
     principal.append(descripcion)
 
     separador = Gtk::Separator.new(:horizontal)
-
     principal.append(separador)
 
     # ==========================================================
@@ -86,7 +86,6 @@ class FormularioInformeView
     scroll = Gtk::ScrolledWindow.new
 
     scroll.vexpand = true
-    scroll.hexpand = true
     scroll.child = formulario
 
     principal.append(scroll)
@@ -108,34 +107,21 @@ class FormularioInformeView
     boton_volver.hexpand = true
     boton_generar.hexpand = true
 
-    # Ambos botones tienen exactamente el mismo estilo
     boton_volver.add_css_class("secondary")
     boton_generar.add_css_class("secondary")
 
-    # ==========================================================
-    # VOLVER
-    # ==========================================================
-
     boton_volver.signal_connect("clicked") do
-      @ventana.hide
+      @ventana.close
       @on_volver.call
     end
-
-    # ==========================================================
-    # GENERAR
-    # ==========================================================
 
     boton_generar.signal_connect("clicked") do
       datos = obtener_datos
 
-      next unless validar(datos)
-
-      # Importante:
-      # No destruimos la ventana con close.
-      # La ocultamos antes de pasar a la siguiente vista.
-      @ventana.hide
-
-      @on_generar.call(datos)
+      if validar(datos)
+        @ventana.close
+        @on_generar.call(datos)
+      end
     end
 
     botones.append(boton_volver)
@@ -143,22 +129,20 @@ class FormularioInformeView
 
     principal.append(botones)
 
-    # ==========================================================
-    # VENTANA
-    # ==========================================================
-
     @ventana.child = principal
   end
 
-  # ============================================================
-  # CREAR CONTROL
-  # ============================================================
+  # ==========================================================
+  # CREAR CONTROL SEGÚN TIPO
+  # ==========================================================
 
   def crear_control(campo)
     case campo.tipo
 
     when "texto"
-      crear_texto
+      entry = Gtk::Entry.new
+      entry.hexpand = true
+      entry
 
     when "textarea"
       crear_textarea
@@ -177,21 +161,9 @@ class FormularioInformeView
     end
   end
 
-  # ============================================================
-  # TEXTO
-  # ============================================================
-
-  def crear_texto
-    control = Gtk::Entry.new
-
-    control.hexpand = true
-
-    control
-  end
-
-  # ============================================================
-  # NÚMERO
-  # ============================================================
+  # ==========================================================
+  # CAMPO NUMÉRICO
+  # ==========================================================
 
   def crear_numero
     adjustment = Gtk::Adjustment.new(
@@ -214,21 +186,116 @@ class FormularioInformeView
     control
   end
 
-  # ============================================================
-  # FECHA
-  # ============================================================
+  # ==========================================================
+  # CAMPO FECHA
+  #
+  # Permite:
+  #   1. Escribir 20/08/2026
+  #   2. Seleccionar mediante calendario
+  # ==========================================================
 
   def crear_fecha
+    contenedor = Gtk::Box.new(:horizontal, 6)
+
+    contenedor.hexpand = true
+
+    # ----------------------------------------------------------
+    # INPUT DE FECHA
+    # ----------------------------------------------------------
+
+    entrada = Gtk::Entry.new
+
+    entrada.placeholder_text = "dd/mm/aaaa"
+    entrada.hexpand = true
+
+    entrada.add_css_class("date-entry")
+
+    # ----------------------------------------------------------
+    # BOTÓN CALENDARIO
+    # ----------------------------------------------------------
+
+    boton = Gtk::Button.new(
+      label: "📅"
+    )
+
+    boton.add_css_class("date-button")
+
+    boton.set_size_request(48, 40)
+
+    boton.signal_connect("clicked") do
+      mostrar_calendario(entrada)
+    end
+
+    # ----------------------------------------------------------
+    # AÑADIR
+    # ----------------------------------------------------------
+
+    contenedor.append(entrada)
+    contenedor.append(boton)
+
+    contenedor
+  end
+
+  # ==========================================================
+  # CALENDARIO
+  # ==========================================================
+
+  def mostrar_calendario(entrada)
+    dialogo = Gtk::Window.new
+
+    dialogo.title = "Seleccionar fecha"
+    dialogo.modal = true
+    dialogo.transient_for = @ventana
+
+    dialogo.set_default_size(320, 320)
+    dialogo.resizable = false
+
+    contenedor = Gtk::Box.new(:vertical, 10)
+
+    contenedor.margin_top = 15
+    contenedor.margin_bottom = 15
+    contenedor.margin_start = 15
+    contenedor.margin_end = 15
+
     calendario = Gtk::Calendar.new
 
     calendario.hexpand = true
+    calendario.vexpand = true
 
-    calendario
+    boton_aceptar = Gtk::Button.new(
+      label: "Seleccionar fecha"
+    )
+
+    boton_aceptar.add_css_class("secondary")
+
+    boton_aceptar.signal_connect("clicked") do
+      fecha = calendario.date
+
+      texto = fecha.format("%Y-%m-%d")
+
+      fecha_ruby = Date.strptime(
+        texto,
+        "%Y-%m-%d"
+      )
+
+      entrada.text = fecha_ruby.strftime(
+        "%d/%m/%Y"
+      )
+
+      dialogo.close
+    end
+
+    contenedor.append(calendario)
+    contenedor.append(boton_aceptar)
+
+    dialogo.child = contenedor
+
+    dialogo.present
   end
 
-  # ============================================================
+  # ==========================================================
   # TEXTAREA
-  # ============================================================
+  # ==========================================================
 
   def crear_textarea
     contenedor = Gtk::ScrolledWindow.new
@@ -247,9 +314,9 @@ class FormularioInformeView
     contenedor
   end
 
-  # ============================================================
+  # ==========================================================
   # OBTENER DATOS
-  # ============================================================
+  # ==========================================================
 
   def obtener_datos
     datos = {}
@@ -266,9 +333,9 @@ class FormularioInformeView
     datos
   end
 
-  # ============================================================
+  # ==========================================================
   # LEER CONTROL
-  # ============================================================
+  # ==========================================================
 
   def leer_control(control, tipo)
     case tipo
@@ -294,23 +361,33 @@ class FormularioInformeView
     end
   end
 
-  # ============================================================
+  # ==========================================================
   # LEER FECHA
-  # ============================================================
+  # ==========================================================
 
-  def leer_fecha(calendario)
-    fecha = calendario.date
+  def leer_fecha(contenedor)
+    entrada = contenedor.first_child
 
-    # Gtk::Calendar devuelve GLib::DateTime.
-    # Lo convertimos a una fecha Ruby mediante el formato ISO.
-    texto = fecha.format("%Y-%m-%d")
+    valor = entrada.text.to_s.strip
 
-    Date.strptime(texto, "%Y-%m-%d").strftime("%d/%m/%Y")
+    return "" if valor.empty?
+
+    begin
+      fecha = Date.strptime(
+        valor,
+        "%d/%m/%Y"
+      )
+
+      fecha.strftime("%d/%m/%Y")
+
+    rescue ArgumentError
+      valor
+    end
   end
 
-  # ============================================================
+  # ==========================================================
   # VALIDACIÓN
-  # ============================================================
+  # ==========================================================
 
   def validar(datos)
     @tipo.campos.each do |campo|
@@ -325,14 +402,34 @@ class FormularioInformeView
 
         return false
       end
+
+      # --------------------------------------------------------
+      # Validación específica de fecha
+      # --------------------------------------------------------
+
+      if campo.tipo == "fecha"
+        begin
+          Date.strptime(
+            valor.to_s,
+            "%d/%m/%Y"
+          )
+        rescue ArgumentError
+          mostrar_error(
+            "El campo '#{campo.nombre}' debe tener " \
+              "el formato dd/mm/aaaa."
+          )
+
+          return false
+        end
+      end
     end
 
     true
   end
 
-  # ============================================================
+  # ==========================================================
   # MOSTRAR ERROR
-  # ============================================================
+  # ==========================================================
 
   def mostrar_error(mensaje)
     dialogo = Gtk::MessageDialog.new(
