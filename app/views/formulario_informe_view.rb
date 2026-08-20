@@ -1,5 +1,5 @@
 require "gtk4"
-
+require "date"
 class FormularioInformeView
   def initialize(application, tipo, on_volver:, on_generar:)
     @application = application
@@ -301,7 +301,11 @@ class FormularioInformeView
   def leer_fecha(calendario)
     fecha = calendario.date
 
-    fecha.to_s
+    # Gtk::Calendar devuelve GLib::DateTime.
+    # Lo convertimos a una fecha Ruby mediante el formato ISO.
+    texto = fecha.format("%Y-%m-%d")
+
+    Date.strptime(texto, "%Y-%m-%d").strftime("%d/%m/%Y")
   end
 
   # ============================================================
