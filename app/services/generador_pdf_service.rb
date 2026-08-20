@@ -97,7 +97,7 @@ class GeneradorPdfService
 
     end
 
-    pdf.move_down 18
+    pdf.move_down 30
 
     # ----------------------------------------------------------
     # LÍNEA
