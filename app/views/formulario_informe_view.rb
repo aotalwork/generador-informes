@@ -138,24 +138,24 @@ class FormularioInformeView
 
   def crear_control(campo)
     case campo.tipo
-
     when "texto"
       entry = Gtk::Entry.new
       entry.hexpand = true
       entry
-
     when "textarea"
       crear_textarea
-
     when "fecha"
       crear_fecha
-
     when "numero"
       crear_numero
-
+    when "booleano"           # <--- NUEVO
+      crear_booleano
+    when "seleccion"          # <--- NUEVO
+      crear_seleccion(campo.opciones)
+    when "multiseleccion"     # <--- NUEVO
+      crear_multiseleccion(campo.opciones)
     when "checkbox"
       Gtk::CheckButton.new
-
     else
       Gtk::Entry.new
     end
@@ -339,26 +339,55 @@ class FormularioInformeView
 
   def leer_control(control, tipo)
     case tipo
-
     when "texto"
       control.text
-
     when "fecha"
       leer_fecha(control)
-
     when "textarea"
       text_view = control.child
       text_view.buffer.text
-
     when "numero"
       control.value
-
+    when "booleano"           # <--- NUEVO
+      leer_booleano(control)
+    when "seleccion"          # <--- NUEVO
+      leer_seleccion(control)
+    when "multiseleccion"     # <--- NUEVO
+      leer_multiseleccion(control)
     when "checkbox"
       control.active
-
     else
       control.respond_to?(:text) ? control.text : nil
     end
+  end
+  # ==========================================================
+  # EXTRACCIÓN Y LECTURA DE DATOS (AÑADIR ESTO)
+  # ==========================================================
+
+  def leer_booleano(contenedor)
+    radio_si = contenedor.first_child
+    radio_si.active?
+  end
+
+  # ---> ESTE ES EL MÉTODO QUE FALTA Y LANZA EL CRASH <---
+  def leer_seleccion(dropdown)
+    posicion = dropdown.selected
+    return "" if posicion == Gtk::INVALID_LIST_POSITION
+
+    dropdown.model.get_string(posicion)
+  end
+
+  # ---> ASEGÚRATE DE TENER TAMBIÉN ESTE PARA LA MULTISELECCIÓN <---
+  def leer_multiseleccion(contenedor)
+    seleccionados = []
+    check = contenedor.first_child
+    while check
+      if check.respond_to?(:active?) && check.active?
+        seleccionados << check.label
+      end
+      check = check.next_sibling
+    end
+    seleccionados
   end
 
   # ==========================================================
@@ -446,4 +475,172 @@ class FormularioInformeView
 
     dialogo.present
   end
+
+  # ==========================================================
+  # CAMPO BOOLEANO (Pintado como Radio Buttons Sí / No)
+  # ==========================================================
+  # ==========================================================
+  # CAMPO BOOLEANO (Pintado como Radio Buttons Sí / No)
+  # ==========================================================
+  def crear_booleano
+    contenedor = Gtk::Box.new(:horizontal, 15)
+
+    # Se pasa la etiqueta como argumento posicional directo, sin el hash 'label:'
+    radio_si = Gtk::CheckButton.new("Sí")
+    radio_no = Gtk::CheckButton.new("No")
+
+    # En GTK4 el comportamiento de grupo de Radio se asigna así:
+    radio_no.group = radio_si
+
+    # Por defecto marcamos No para evitar consentimientos accidentales en el IML
+    radio_no.active = true
+
+    contenedor.append(radio_si)
+    contenedor.append(radio_no)
+    contenedor
+  end
+
+  # ==========================================================
+  # CAMPO MULTISELECCIÓN (Lista de Checkboxes)
+  # ==========================================================
+  def crear_multiseleccion(opciones)
+    contenedor = Gtk::Box.new(:vertical, 6)
+    contenedor.margin_start = 10
+
+    opciones.each do |opcion|
+      # Se corrige también aquí pasándolo como argumento posicional plano
+      check = Gtk::CheckButton.new(opcion)
+      contenedor.append(check)
+    end
+
+    contenedor
+  end
+
+
+  # ==========================================================
+  # CAMPO SELECCIÓN (Desplegable / ComboBox)
+  # ==========================================================
+  def crear_seleccion(opciones)
+    dropdown = Gtk::DropDown.new
+
+    # GTK4 utiliza StringList para cargar arrays de strings nativos
+    lista_strings = Gtk::StringList.new(opciones)
+    dropdown.model = lista_strings
+    dropdown.hexpand = true
+
+    dropdown
+  end
+
+  # ==========================================================
+  # CAMPO MULTISELECCIÓN (Lista de Checkboxes)
+  # ==========================================================
+  # ==========================================================
+  # CAMPO MULTISELECCIÓN (Lista de Checkboxes)
+  # ==========================================================
+  def crear_multiseleccion(opciones)
+    contenedor = Gtk::Box.new(:vertical, 6)
+    contenedor.margin_start = 10
+
+    opciones.each do |opcion|
+      # Se elimina la clave 'label:' y se pasa 'opcion' directamente como argumento posicional
+      check = Gtk::CheckButton.new(opcion)
+      contenedor.append(check)
+    end
+
+    contenedor
+  end
+
+
+  def crear_control(campo)
+    case campo.tipo
+    when "texto"
+      entry = Gtk::Entry.new
+      entry.hexpand = true
+      entry
+    when "textarea"
+      crear_textarea
+    when "fecha"
+      crear_fecha
+    when "numero"
+      crear_numero
+    when "booleano"           # <--- NUEVO
+      crear_booleano
+    when "seleccion"          # <--- NUEVO
+      crear_seleccion(campo.opciones)
+    when "multiseleccion"     # <--- NUEVO
+      crear_multiseleccion(campo.opciones)
+    when "checkbox"
+      Gtk::CheckButton.new
+    else
+      Gtk::Entry.new
+    end
+  end
+
+  # ==========================================================
+  # VALIDACIÓN
+  # ==========================================================
+  def validar(datos)
+    errores = []
+
+    @tipo.campos.each do |campo|
+      next unless campo.obligatorio?
+
+      valor = datos[campo.id]
+
+      case campo.tipo
+      when "multiseleccion"
+        if valor.nil? || valor.empty?
+          errores << "Debe seleccionar al menos una opción en: #{campo.nombre}"
+        end
+      when "booleano"
+        # Un booleano siempre tendrá true o false seleccionado por el grupo radio,
+        # pero es una buena práctica dejar la estructura limpia.
+        next
+      else
+        if valor.nil? || valor.to_s.strip.empty?
+          errores << "El campo es obligatorio: #{campo.nombre}"
+        end
+      end
+    end
+
+    if errores.any?
+      mostrar_alerta_errores(errores)
+      false
+    else
+      true
+    end
+  end
+
+  def mostrar_alerta_errores(errores)
+    dialogo = Gtk::Window.new
+    dialogo.title = "Campos obligatorios incompletos"
+    dialogo.modal = true
+    dialogo.transient_for = @ventana
+    dialogo.set_default_size(400, 200)
+
+    contenedor = Gtk::Box.new(:vertical, 12)
+    contenedor.margin_top = 15
+    contenedor.margin_bottom = 15
+    contenedor.margin_start = 15
+    contenedor.margin_end = 15
+
+    label_titulo = Gtk::Label.new("Por favor, corrija los siguientes errores:")
+    label_titulo.halign = :start
+    contenedor.append(label_titulo)
+
+    texto_errores = errores.map { |e| "• #{e}" }.join("\n")
+    label_cuerpo = Gtk::Label.new(texto_errores)
+    label_cuerpo.halign = :start
+    label_cuerpo.wrap = true
+    contenedor.append(label_cuerpo)
+
+    boton_cerrar = Gtk::Button.new(label: "Entendido")
+    boton_cerrar.add_css_class("secondary")
+    boton_cerrar.signal_connect("clicked") { dialogo.close }
+    contenedor.append(boton_cerrar)
+
+    dialogo.child = contenedor
+    dialogo.present
+  end
+
 end
