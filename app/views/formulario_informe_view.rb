@@ -37,6 +37,21 @@ class FormularioInformeView
     principal.margin_end = 40
 
     # ==========================================================
+    # ENLACE BOE
+    # ==========================================================
+
+    enlace_boe = Gtk::Button.new(label: "Consultar BOE ↗")
+    enlace_boe.halign = :end
+    enlace_boe.add_css_class("link")
+
+    enlace_boe.signal_connect("clicked") do
+      url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-5368"
+      system("xdg-open", url)
+    end
+
+    principal.append(enlace_boe)
+
+    # ==========================================================
     # TÍTULO
     # ==========================================================
 
