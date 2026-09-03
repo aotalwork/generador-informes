@@ -45,7 +45,7 @@ class FormularioInformeView
     enlace_boe.add_css_class("link")
 
     enlace_boe.signal_connect("clicked") do
-      url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-5368"
+      url = "https://www.boe.es/eli/es/l/2000/01/07/1/con"
       system("xdg-open", url)
     end
 
