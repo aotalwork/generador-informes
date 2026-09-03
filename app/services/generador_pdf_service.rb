@@ -34,10 +34,16 @@ class GeneradorPdfService
       generar_cabecera(pdf)
 
       # ========================================================
-      # DATOS
+      # DATOS GENERALES
       # ========================================================
 
       generar_datos(pdf)
+
+      # ========================================================
+      # EXPLORACIÓN PSIQUIÁTRICA
+      # ========================================================
+
+      generar_exploracion_psiquiatrica(pdf)
 
       # ========================================================
       # PIE
@@ -217,7 +223,20 @@ class GeneradorPdfService
 
     @tipo.campos.each do |campo|
 
+      # --------------------------------------------------------
+      # NO MOSTRAR LAS PREGUNTAS AQUÍ
+      # --------------------------------------------------------
+      #
+      # Las preguntas 1-10 se mostrarán posteriormente como
+      # texto dentro de EXPLORACIÓN PSIQUIÁTRICA.
+      #
+
+      next if campo_pregunta_psiquiatrica?(campo)
+
       valor = @datos[campo.id]
+
+      # Si es una sección, no la mostramos como una fila
+      next if campo_seccion?(campo)
 
       filas << [
         campo.nombre.to_s,
@@ -267,6 +286,153 @@ class GeneradorPdfService
       end
 
     end
+
+    pdf.move_down 20
+  end
+
+  # ============================================================
+  # EXPLORACIÓN PSIQUIÁTRICA
+  # ============================================================
+
+  def generar_exploracion_psiquiatrica(pdf)
+
+    frases = []
+
+    # ----------------------------------------------------------
+    # BUSCAR PREGUNTAS 1-10
+    # ----------------------------------------------------------
+
+    (1..10).each do |numero|
+
+      id = "pregunta_#{numero}"
+
+      campo = buscar_campo(id)
+
+      next unless campo
+
+      valor = @datos[campo.id]
+
+      next if valor.nil?
+
+      frase = obtener_frase(campo, valor)
+
+      next if frase.to_s.strip.empty?
+
+      frases << frase.to_s.strip
+
+    end
+
+    # ----------------------------------------------------------
+    # SI NO HAY FRASES, NO MOSTRAMOS LA SECCIÓN
+    # ----------------------------------------------------------
+
+    return if frases.empty?
+
+    # ----------------------------------------------------------
+    # TÍTULO
+    # ----------------------------------------------------------
+
+    pdf.text(
+      "EXPLORACIÓN PSIQUIÁTRICA",
+      size: 13,
+      style: :bold,
+      color: "1D2939"
+    )
+
+    pdf.move_down 8
+
+    # ----------------------------------------------------------
+    # TEXTO GENERADO
+    # ----------------------------------------------------------
+
+    pdf.text(
+      frases.join(" "),
+      size: 10,
+      leading: 4,
+      color: "344054",
+      align: :justify
+    )
+
+    pdf.move_down 20
+  end
+
+  # ============================================================
+  # BUSCAR CAMPO
+  # ============================================================
+
+  def buscar_campo(id)
+
+    @tipo.campos.find do |campo|
+      campo.id.to_s == id.to_s
+    end
+
+  end
+
+  # ============================================================
+  # COMPROBAR SI ES UNA PREGUNTA PSIQUIÁTRICA
+  # ============================================================
+
+  def campo_pregunta_psiquiatrica?(campo)
+
+    id = campo.id.to_s
+
+    id.match?(/\Apregunta_[1-9][0-9]?\z/)
+
+  end
+
+  # ============================================================
+  # COMPROBAR SI ES UNA SECCIÓN
+  # ============================================================
+
+  def campo_seccion?(campo)
+
+    campo.respond_to?(:tipo) &&
+      campo.tipo.to_s == "seccion"
+
+  end
+
+  # ============================================================
+  # OBTENER FRASE SEGÚN RESPUESTA
+  # ============================================================
+
+  def obtener_frase(campo, valor)
+
+    return "" if valor.nil?
+
+    # ----------------------------------------------------------
+    # SI EL CAMPO NO TIENE FRASES
+    # ----------------------------------------------------------
+
+    unless campo.respond_to?(:frases) && campo.frases
+
+      return formatear_valor(valor)
+
+    end
+
+    frases = campo.frases
+
+    # ----------------------------------------------------------
+    # INTENTAMOS ENCONTRAR LA RESPUESTA
+    # ----------------------------------------------------------
+    #
+    # Dependiendo de cómo se cargue YAML, la clave puede ser:
+    #
+    # Integer -> 1
+    # String  -> "1"
+    #
+
+    frase =
+      frases[valor] ||
+      frases[valor.to_s]
+
+    # ----------------------------------------------------------
+    # SI NO EXISTE LA FRASE
+    # ----------------------------------------------------------
+
+    return formatear_valor(valor) if frase.nil?
+
+    frase.to_s
+
   end
 
   # ============================================================
@@ -323,9 +489,14 @@ class GeneradorPdfService
     when FalseClass
       "No"
 
+    when Array
+      valor.join(", ")
+
     else
       valor.to_s
 
     end
+
   end
+
 end

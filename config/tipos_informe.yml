@@ -101,6 +101,10 @@ tipos:
         tipo: seccion
         obligatorio: false
 
+      # ==========================================================
+      # PREGUNTA 1
+      # ==========================================================
+
       - id: pregunta_1
         nombre: Pregunta 1
         tipo: radio
@@ -111,6 +115,17 @@ tipos:
           - 4
           - 5
         obligatorio: true
+
+        frases:
+          1: "Frase correspondiente a la respuesta 1 de la pregunta 1."
+          2: "Frase correspondiente a la respuesta 2 de la pregunta 1."
+          3: "Frase correspondiente a la respuesta 3 de la pregunta 1."
+          4: "Frase correspondiente a la respuesta 4 de la pregunta 1."
+          5: "Frase correspondiente a la respuesta 5 de la pregunta 1."
+
+      # ==========================================================
+      # PREGUNTA 2
+      # ==========================================================
 
       - id: pregunta_2
         nombre: Pregunta 2
@@ -123,6 +138,17 @@ tipos:
           - 5
         obligatorio: true
 
+        frases:
+          1: "Frase correspondiente a la respuesta 1 de la pregunta 2."
+          2: "Frase correspondiente a la respuesta 2 de la pregunta 2."
+          3: "Frase correspondiente a la respuesta 3 de la pregunta 2."
+          4: "Frase correspondiente a la respuesta 4 de la pregunta 2."
+          5: "Frase correspondiente a la respuesta 5 de la pregunta 2."
+
+      # ==========================================================
+      # PREGUNTA 3
+      # ==========================================================
+
       - id: pregunta_3
         nombre: Pregunta 3
         tipo: radio
@@ -133,6 +159,17 @@ tipos:
           - 4
           - 5
         obligatorio: true
+
+        frases:
+          1: "Frase correspondiente a la respuesta 1 de la pregunta 3."
+          2: "Frase correspondiente a la respuesta 2 de la pregunta 3."
+          3: "Frase correspondiente a la respuesta 3 de la pregunta 3."
+          4: "Frase correspondiente a la respuesta 4 de la pregunta 3."
+          5: "Frase correspondiente a la respuesta 5 de la pregunta 3."
+
+      # ==========================================================
+      # PREGUNTA 4
+      # ==========================================================
 
       - id: pregunta_4
         nombre: Pregunta 4
@@ -145,6 +182,17 @@ tipos:
           - 5
         obligatorio: true
 
+        frases:
+          1: "Frase correspondiente a la respuesta 1 de la pregunta 4."
+          2: "Frase correspondiente a la respuesta 2 de la pregunta 4."
+          3: "Frase correspondiente a la respuesta 3 de la pregunta 4."
+          4: "Frase correspondiente a la respuesta 4 de la pregunta 4."
+          5: "Frase correspondiente a la respuesta 5 de la pregunta 4."
+
+      # ==========================================================
+      # PREGUNTA 5
+      # ==========================================================
+
       - id: pregunta_5
         nombre: Pregunta 5
         tipo: radio
@@ -155,6 +203,17 @@ tipos:
           - 4
           - 5
         obligatorio: true
+
+        frases:
+          1: "Frase correspondiente a la respuesta 1 de la pregunta 5."
+          2: "Frase correspondiente a la respuesta 2 de la pregunta 5."
+          3: "Frase correspondiente a la respuesta 3 de la pregunta 5."
+          4: "Frase correspondiente a la respuesta 4 de la pregunta 5."
+          5: "Frase correspondiente a la respuesta 5 de la pregunta 5."
+
+      # ==========================================================
+      # PREGUNTA 6
+      # ==========================================================
 
       - id: pregunta_6
         nombre: Pregunta 6
@@ -167,6 +226,17 @@ tipos:
           - 5
         obligatorio: true
 
+        frases:
+          1: "Frase correspondiente a la respuesta 1 de la pregunta 6."
+          2: "Frase correspondiente a la respuesta 2 de la pregunta 6."
+          3: "Frase correspondiente a la respuesta 3 de la pregunta 6."
+          4: "Frase correspondiente a la respuesta 4 de la pregunta 6."
+          5: "Frase correspondiente a la respuesta 5 de la pregunta 6."
+
+      # ==========================================================
+      # PREGUNTA 7
+      # ==========================================================
+
       - id: pregunta_7
         nombre: Pregunta 7
         tipo: radio
@@ -177,6 +247,17 @@ tipos:
           - 4
           - 5
         obligatorio: true
+
+        frases:
+          1: "Frase correspondiente a la respuesta 1 de la pregunta 7."
+          2: "Frase correspondiente a la respuesta 2 de la pregunta 7."
+          3: "Frase correspondiente a la respuesta 3 de la pregunta 7."
+          4: "Frase correspondiente a la respuesta 4 de la pregunta 7."
+          5: "Frase correspondiente a la respuesta 5 de la pregunta 7."
+
+      # ==========================================================
+      # PREGUNTA 8
+      # ==========================================================
 
       - id: pregunta_8
         nombre: Pregunta 8
@@ -189,6 +270,17 @@ tipos:
           - 5
         obligatorio: true
 
+        frases:
+          1: "Frase correspondiente a la respuesta 1 de la pregunta 8."
+          2: "Frase correspondiente a la respuesta 2 de la pregunta 8."
+          3: "Frase correspondiente a la respuesta 3 de la pregunta 8."
+          4: "Frase correspondiente a la respuesta 4 de la pregunta 8."
+          5: "Frase correspondiente a la respuesta 5 de la pregunta 8."
+
+      # ==========================================================
+      # PREGUNTA 9
+      # ==========================================================
+
       - id: pregunta_9
         nombre: Pregunta 9
         tipo: radio
@@ -200,6 +292,17 @@ tipos:
           - 5
         obligatorio: true
 
+        frases:
+          1: "Frase correspondiente a la respuesta 1 de la pregunta 9."
+          2: "Frase correspondiente a la respuesta 2 de la pregunta 9."
+          3: "Frase correspondiente a la respuesta 3 de la pregunta 9."
+          4: "Frase correspondiente a la respuesta 4 de la pregunta 9."
+          5: "Frase correspondiente a la respuesta 5 de la pregunta 9."
+
+      # ==========================================================
+      # PREGUNTA 10
+      # ==========================================================
+
       - id: pregunta_10
         nombre: Pregunta 10
         tipo: radio
@@ -210,6 +313,13 @@ tipos:
           - 4
           - 5
         obligatorio: true
+
+        frases:
+          1: "Frase correspondiente a la respuesta 1 de la pregunta 10."
+          2: "Frase correspondiente a la respuesta 2 de la pregunta 10."
+          3: "Frase correspondiente a la respuesta 3 de la pregunta 10."
+          4: "Frase correspondiente a la respuesta 4 de la pregunta 10."
+          5: "Frase correspondiente a la respuesta 5 de la pregunta 10."
 
       # ==========================================================
       # VALORACIÓN
