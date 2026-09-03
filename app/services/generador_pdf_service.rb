@@ -35,33 +35,32 @@ class GeneradorPdfService
   def generar(ruta)
     FileUtils.mkdir_p(File.dirname(ruta))
 
-    # Márgenes administrativos oficiales (A4: Top 40, Bottom 50, Left 60, Right 50)
+    # Definimos la zona útil de trabajo dejando un margen holgado
     Prawn::Document.generate(
       ruta,
       page_size: "A4",
-      margin: [40, 50, 50, 60]
+      margin: [40, 40, 40, 40]
     ) do |pdf|
 
       configurar_fuentes(pdf)
       pdf.font_size = 10
 
-      # 1. Pie de página formal
+      # 1. Dibujar la línea vertical fija y la banda lateral izquierda
+      generar_columna_lateral_oficial(pdf)
+
+      # 2. Definir el Pie de Página
       generar_pie(pdf)
 
-      # 2. Encabezado judicial
-      generar_cabecera_oficial(pdf)
+      # 3. Restringir todo el texto del informe a la derecha de la línea vertical
+      x_inicio_cuerpo = 95
+      ancho_cuerpo     = pdf.bounds.width - x_inicio_cuerpo
 
-      # 3. Datos del expediente / procedimiento
-      generar_bloque_expediente(pdf)
-
-      # 4. Datos del paciente y antecedentes
-      generar_datos_paciente(pdf)
-
-      # 5. Exploración psiquiátrica
-      generar_exploracion_psiquiatrica(pdf)
-
-      # 6. Dictamen / Conclusión oficial
-      generar_dictamen_conclusion(pdf)
+      pdf.bounding_box([x_inicio_cuerpo, pdf.bounds.top], width: ancho_cuerpo) do
+        generar_cabecera_cuerpo(pdf)
+        generar_datos_paciente(pdf)
+        generar_exploracion_psiquiatrica(pdf)
+        generar_dictamen_conclusion(pdf)
+      end
     end
 
     ruta
@@ -82,84 +81,68 @@ class GeneradorPdfService
   end
 
   # ============================================================
-  # ENCABEZADO JUDICIAL OFICIAL
+  # COLUMNA LATERAL (ESCUDO Y LÍNEA VERTICAL CONTINUA)
   # ============================================================
 
-  def generar_cabecera_oficial(pdf)
-    ruta_logo    = File.expand_path("../../assets/escudospain.png", __dir__)
-    ancho_escudo = 42
-    posicion_y   = pdf.cursor
+  def generar_columna_lateral_oficial(pdf)
+    pdf.repeat(:all) do
+      # Línea vertical divisoria continua de arriba a abajo
+      pdf.stroke_color "000000"
+      pdf.line_width 0.8
+      pdf.stroke_line [80, pdf.bounds.top], [80, pdf.bounds.bottom + 20]
 
-    # Escudo Oficial de España / Administración de Justicia
-    if File.exist?(ruta_logo)
-      pdf.image ruta_logo, at: [0, posicion_y], width: ancho_escudo
+      # Dibujar la marca lateral
+      pdf.bounding_box([0, pdf.bounds.top], width: 75) do
+        ruta_logo = File.expand_path("../../assets/escudospain.png", __dir__)
+
+        if File.exist?(ruta_logo)
+          pdf.image ruta_logo, width: 45, position: :center
+          pdf.move_down 4
+        end
+
+        pdf.text "ADMINISTRACIÓN", size: 6.5, style: :bold, align: :center
+        pdf.text "DE JUSTICIA", size: 6.5, style: :bold, align: :center
+      end
     end
+  end
 
-    # Texto Institucional centrado
-    pdf.bounding_box([ancho_escudo + 15, posicion_y], width: pdf.bounds.width - (ancho_escudo + 15)) do
-      pdf.text "ADMINISTRACIÓN DE JUSTICIA", size: 10, style: :bold, align: :center
-      pdf.text "INSTITUTO DE MEDICINA LEGAL Y CIENCIAS FORENSES", size: 9, style: :bold, align: :center
-      pdf.text "CLÍNICA MÉRICO FORENSE", size: 8.5, align: :center
-    end
+  # ============================================================
+  # CABECERA DEL CUERPO (JUZGADO Y TÍTULO)
+  # ============================================================
 
-    pdf.y = posicion_y - ancho_escudo - 10
-    pdf.stroke_color "000000"
-    pdf.line_width 1
-    pdf.stroke_horizontal_rule
-    pdf.move_down 12
+  def generar_cabecera_cuerpo(pdf)
+    juzgado      = obtener_valor_campo("juzgado") || obtener_valor_campo("juzgado_instruccion") || "JUZGADO DE INSTRUCCIÓN"
+    procedimiento = obtener_valor_campo("procedimiento") || obtener_valor_campo("expediente") || "—"
+    fecha        = obtener_valor_campo("a_fecha_de") || Time.now.strftime("%d/%m/%Y")
 
-    # Título oficial del informe
-    pdf.text "INFORME MÉDICO-FORENSE", size: 11, style: :bold, align: :center
-    pdf.move_down 4
+    pdf.move_down 5
+    pdf.text juzgado.upcase, size: 10.5, style: :bold
+    pdf.move_down 2
+    pdf.text procedimiento, size: 9.5
+    pdf.move_down 18
+
+    pdf.text "INFORME DE SANIDAD MÉDICO FORENSE", size: 11.5, style: :bold, align: :center
+    pdf.move_down 15
+
+    pdf.text "<b>Médico Forense:</b> #{MEDICO}", size: 10, inline_format: true
+    pdf.text "<b>Fecha:</b> #{fecha}", size: 10, inline_format: true
 
     if @tipo.respond_to?(:descripcion) && !@tipo.descripcion.to_s.strip.empty?
-      pdf.text "<u>#{@tipo.descripcion.to_s.upcase}</u>", size: 9.5, style: :bold, align: :center, inline_format: true
+      pdf.move_down 6
+      pdf.text "<i>#{@tipo.descripcion}</i>", size: 9.5, color: "333333", inline_format: true
     end
 
     pdf.move_down 14
   end
 
   # ============================================================
-  # BLOQUE DE REFERENCIA JUDICIAL
-  # ============================================================
-
-  def generar_bloque_expediente(pdf)
-    juzgado      = obtener_valor_campo("juzgado") || obtener_valor_campo("juzgado_instruccion") || "—"
-    procedimiento = obtener_valor_campo("procedimiento") || obtener_valor_campo("expediente") || "—"
-    fecha        = obtener_valor_campo("a_fecha_de") || Time.now.strftime("%d/%m/%Y")
-
-    datos_ref = [
-      ["<b>ÓRGANO JUDICIAL:</b> #{juzgado}", "<b>FECHA:</b> #{fecha}"],
-      ["<b>PROCEDIMIENTO/DILIGENCIAS:</b> #{procedimiento}", "<b>MÉDICO FORENSE:</b> #{MEDICO}"]
-    ]
-
-    pdf.table(datos_ref, width: pdf.bounds.width) do |t|
-      t.cells.padding = [2, 4, 2, 4]
-      t.cells.borders = []
-      t.cells.size = 9.5
-      t.cells.inline_format = true
-      t.column(0).width = pdf.bounds.width * 0.60
-      t.column(1).width = pdf.bounds.width * 0.40
-    end
-
-    pdf.move_down 8
-    pdf.stroke_color "CCCCCC"
-    pdf.line_width 0.5
-    pdf.stroke_horizontal_rule
-    pdf.move_down 10
-  end
-
-  # ============================================================
-  # DATOS DEL AFECTADO Y EVALUACIÓN
+  # SECCIÓN I: DATOS DEL PACIENTE
   # ============================================================
 
   def generar_datos_paciente(pdf)
-    pdf.text "I. DATOS DEL AFECTADO Y ANTECEDENTES", size: 10, style: :bold
-    pdf.move_down 6
+    filas = []
 
-    filas_paciente = []
-
-    campos_ordenados = %w[
+    campos_paciente = %w[
       nombre_y_apellidos_del_afectado
       dni_nie
       centro_residencial___geriatrico
@@ -167,35 +150,35 @@ class GeneradorPdfService
       juicio_diagnostico_clinico
     ]
 
-    campos_ordenados.each do |id_campo|
-      campo = buscar_campo(id_campo)
+    campos_paciente.each do |id|
+      campo = buscar_campo(id)
       next unless campo
 
       valor = @datos[campo.id]
       next if valor.nil? || valor.to_s.strip.empty?
 
-      filas_paciente << [
-        "<b>#{campo.nombre}:</b>",
-        formatear_valor(valor)
-      ]
+      filas << ["<b>#{campo.nombre}:</b>", formatear_valor(valor)]
     end
 
-    if filas_paciente.any?
-      pdf.table(filas_paciente, width: pdf.bounds.width) do |t|
-        t.cells.padding = [3, 4, 3, 4]
-        t.cells.borders = []
-        t.cells.size = 9.5
-        t.cells.inline_format = true
-        t.column(0).width = pdf.bounds.width * 0.38
-        t.column(1).width = pdf.bounds.width * 0.62
-      end
+    return if filas.empty?
+
+    pdf.text "I. DATOS DEL AFECTADO Y ANTECEDENTES", size: 10, style: :bold
+    pdf.move_down 4
+
+    pdf.table(filas, width: pdf.bounds.width) do |t|
+      t.cells.padding = [2, 2, 2, 0]
+      t.cells.borders = []
+      t.cells.size = 9.5
+      t.cells.inline_format = true
+      t.column(0).width = pdf.bounds.width * 0.45
+      t.column(1).width = pdf.bounds.width * 0.55
     end
 
-    pdf.move_down 10
+    pdf.move_down 12
   end
 
   # ============================================================
-  # EXPLORACIÓN PSIQUIÁTRICA
+  # SECCIÓN II: EXPLORACIÓN PSIQUIÁTRICA
   # ============================================================
 
   def generar_exploracion_psiquiatrica(pdf)
@@ -212,24 +195,24 @@ class GeneradorPdfService
       frase = obtener_frase(campo, valor)
       next if frase.to_s.strip.empty?
 
-      respuestas << "<b>- Pregunta #{numero}:</b> #{frase}"
+      respuestas << "• <b>Pregunta #{numero}:</b> #{frase}"
     end
 
     return if respuestas.empty?
 
-    pdf.text "II. EXPLORACIÓN PSIQUIÁTRICA Y ESTADO ACTUAL", size: 10, style: :bold
+    pdf.text "II. EXPLORACIÓN PSIQUIÁTRICA", size: 10, style: :bold
     pdf.move_down 6
 
     respuestas.each do |linea|
-      pdf.text linea, size: 9.5, align: :justify, leading: 2.5, inline_format: true
+      pdf.text linea, size: 9.5, align: :justify, leading: 2, inline_format: true
       pdf.move_down 3
     end
 
-    pdf.move_down 10
+    pdf.move_down 12
   end
 
   # ============================================================
-  # DICTAMEN / CONCLUSIÓN OFICIAL
+  # SECCIÓN III: DICTAMEN PERICIAL
   # ============================================================
 
   def generar_dictamen_conclusion(pdf)
@@ -239,10 +222,10 @@ class GeneradorPdfService
     capacidad = obtener_valor_campo("mantiene_capacidad_para_prestar_consentimiento_valido_") || "No"
     riesgo    = obtener_valor_campo("criterios_de_riesgo_detectados") || "Riesgo de autoagresión o desamparo grave"
     dictamen  = obtener_valor_campo("sentido_del_dictamen_pericial") || "Favorable a la ratificación"
-    colegiado = obtener_valor_campo("identificacion_del_medico_forense__n__colegiado_") || "g"
+    colegiado = obtener_valor_campo("identificacion_del_medico_forense__n__colegiado_") || "—"
 
     texto_conclusion = <<~TEXTO
-      En virtud de la exploración realizada y los antecedentes obrantes en la causa:
+      En virtud de la exploración realizada y los antecedentes obrantes:
 
       1. ¿Mantiene capacidad para prestar consentimiento válido?: <b>#{capacidad}</b>.
       2. Criterios de riesgo detectados: <b>#{riesgo}</b>.
@@ -251,20 +234,20 @@ class GeneradorPdfService
       Lo que se emite e informa a los efectos judiciales oportunos.
     TEXTO
 
-    pdf.text texto_conclusion, size: 9.5, align: :justify, leading: 3, inline_format: true
-    pdf.move_down 25
+    pdf.text texto_conclusion, size: 9.5, align: :justify, leading: 2.5, inline_format: true
+    pdf.move_down 20
 
-    # Bloque de Firma Oficial
-    pdf.bounding_box([pdf.bounds.width - 220, pdf.cursor], width: 220) do
-      pdf.text "El Médico Forense,", size: 9.5, align: :center
-      pdf.move_down 30
-      pdf.text "Fdo.: #{MEDICO}", size: 9.5, style: :bold, align: :center
-      pdf.text "Nº Colegiado / Reg.: #{colegiado}", size: 8.5, align: :center
+    # Bloque de Firma
+    pdf.bounding_box([pdf.bounds.width - 200, pdf.cursor], width: 200) do
+      pdf.text "El Médico Forense,", size: 9.5
+      pdf.move_down 25
+      pdf.text "Fdo.: #{MEDICO}", size: 9.5, style: :bold
+      pdf.text "Nº Colegiado / Reg.: #{colegiado}", size: 8.5
     end
   end
 
   # ============================================================
-  # AYUDANTES Y AUXILIARES
+  # FUNCIONES DE APOYO
   # ============================================================
 
   def obtener_valor_campo(id)
@@ -296,24 +279,10 @@ class GeneradorPdfService
   end
 
   def generar_pie(pdf)
-    pdf.repeat(:all) do
-      pdf.canvas do
-        posicion_y = 22
-        margin_x   = 60
-
-        pdf.draw_text(
-          "INFORME MÉDICO-FORENSE — ADMINISTRACIÓN DE JUSTICIA",
-          at: [margin_x, posicion_y],
-          size: 7.5,
-          color: "444444"
-        )
-      end
-    end
-
     pdf.number_pages(
       "Página <page> de <total>",
-      at: [pdf.bounds.right - 80, 22 - pdf.bounds.absolute_bottom],
-      size: 7.5,
+      at: [pdf.bounds.right - 80, 10],
+      size: 8,
       align: :right,
       color: "444444"
     )
