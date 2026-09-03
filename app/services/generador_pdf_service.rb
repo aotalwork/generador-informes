@@ -19,40 +19,31 @@ class GeneradorPdfService
   FUENTE_ITALIC      = File.join(FUENTES_DIR, "LiberationSerif-Italic.ttf")
   FUENTE_BOLD_ITALIC = File.join(FUENTES_DIR, "LiberationSerif-BoldItalic.ttf")
 
-  # ============================================================
-  # INICIALIZACIÓN
-  # ============================================================
-
   def initialize(tipo, datos)
     @tipo  = tipo
-    @datos = datos
+    @datos = datos || {}
   end
-
-  # ============================================================
-  # GENERAR PDF
-  # ============================================================
 
   def generar(ruta)
     FileUtils.mkdir_p(File.dirname(ruta))
 
-    # Definimos la zona útil de trabajo dejando un margen holgado
     Prawn::Document.generate(
       ruta,
       page_size: "A4",
-      margin: [40, 40, 40, 40]
+      margin: [35, 40, 35, 40]
     ) do |pdf|
 
       configurar_fuentes(pdf)
-      pdf.font_size = 10
+      pdf.font_size = 9.5
 
-      # 1. Dibujar la línea vertical fija y la banda lateral izquierda
+      # 1. Columna lateral con escudo y línea
       generar_columna_lateral_oficial(pdf)
 
-      # 2. Definir el Pie de Página
+      # 2. Pie de página
       generar_pie(pdf)
 
-      # 3. Restringir todo el texto del informe a la derecha de la línea vertical
-      x_inicio_cuerpo = 95
+      # 3. Delimitar el área útil de trabajo a la derecha
+      x_inicio_cuerpo = 90
       ancho_cuerpo     = pdf.bounds.width - x_inicio_cuerpo
 
       pdf.bounding_box([x_inicio_cuerpo, pdf.bounds.top], width: ancho_cuerpo) do
@@ -80,23 +71,18 @@ class GeneradorPdfService
     pdf.font "LiberationSerif"
   end
 
-  # ============================================================
-  # COLUMNA LATERAL (ESCUDO Y LÍNEA VERTICAL CONTINUA)
-  # ============================================================
-
   def generar_columna_lateral_oficial(pdf)
     pdf.repeat(:all) do
-      # Línea vertical divisoria continua de arriba a abajo
+      # Línea vertical divisoria continua
       pdf.stroke_color "000000"
       pdf.line_width 0.8
-      pdf.stroke_line [80, pdf.bounds.top], [80, pdf.bounds.bottom + 20]
+      pdf.stroke_line [75, pdf.bounds.top], [75, pdf.bounds.bottom + 15]
 
-      # Dibujar la marca lateral
-      pdf.bounding_box([0, pdf.bounds.top], width: 75) do
+      pdf.bounding_box([0, pdf.bounds.top], width: 70) do
         ruta_logo = File.expand_path("../../assets/escudospain.png", __dir__)
 
         if File.exist?(ruta_logo)
-          pdf.image ruta_logo, width: 45, position: :center
+          pdf.image ruta_logo, width: 42, position: :center
           pdf.move_down 4
         end
 
@@ -106,87 +92,75 @@ class GeneradorPdfService
     end
   end
 
-  # ============================================================
-  # CABECERA DEL CUERPO (JUZGADO Y TÍTULO)
-  # ============================================================
-
   def generar_cabecera_cuerpo(pdf)
-    juzgado      = obtener_valor_campo("juzgado") || obtener_valor_campo("juzgado_instruccion") || "JUZGADO DE INSTRUCCIÓN"
-    procedimiento = obtener_valor_campo("procedimiento") || obtener_valor_campo("expediente") || "—"
-    fecha        = obtener_valor_campo("a_fecha_de") || Time.now.strftime("%d/%m/%Y")
+    juzgado       = obtener_valor_flexible(%w[juzgado juzgado_instruccion organo_judicial]) || "JUZGADO DE INSTRUCCIÓN"
+    procedimiento = obtener_valor_flexible(%w[procedimiento expediente diligencias jf]) || "—"
+    fecha         = obtener_valor_flexible(%w[a_fecha_de fecha fecha_dictamen]) || Time.now.strftime("%d/%m/%Y")
 
-    pdf.move_down 5
-    pdf.text juzgado.upcase, size: 10.5, style: :bold
     pdf.move_down 2
-    pdf.text procedimiento, size: 9.5
-    pdf.move_down 18
+    pdf.text juzgado.upcase, size: 10, style: :bold
+    pdf.text "PROCEDIMIENTO / DILIGENCIAS: #{procedimiento}", size: 9
+    pdf.move_down 10
 
-    pdf.text "INFORME DE SANIDAD MÉDICO FORENSE", size: 11.5, style: :bold, align: :center
-    pdf.move_down 15
+    pdf.text "INFORME MÉDICO-FORENSE DE RATIFICACIÓN DE INTERNAMIENTO INVOLUNTARIO", size: 10.5, style: :bold, align: :center
+    pdf.text "(Art. 763 Ley de Enjuiciamiento Civil)", size: 8.5, style: :italic, align: :center
+    pdf.move_down 10
 
-    pdf.text "<b>Médico Forense:</b> #{MEDICO}", size: 10, inline_format: true
-    pdf.text "<b>Fecha:</b> #{fecha}", size: 10, inline_format: true
-
-    if @tipo.respond_to?(:descripcion) && !@tipo.descripcion.to_s.strip.empty?
-      pdf.move_down 6
-      pdf.text "<i>#{@tipo.descripcion}</i>", size: 9.5, color: "333333", inline_format: true
-    end
-
-    pdf.move_down 14
+    pdf.text "<b>Médico Forense:</b> #{MEDICO}", size: 9.5, inline_format: true
+    pdf.text "<b>Fecha de Dictamen:</b> #{fecha}", size: 9.5, inline_format: true
+    pdf.move_down 10
   end
 
   # ============================================================
-  # SECCIÓN I: DATOS DEL PACIENTE
+  # I. DATOS DEL AFECTADO Y ANTECEDENTES (Búsqueda tolerante)
   # ============================================================
 
   def generar_datos_paciente(pdf)
     filas = []
 
-    campos_paciente = %w[
-      nombre_y_apellidos_del_afectado
-      dni_nie
-      centro_residencial___geriatrico
-      antecedentes_medicos_y_tratamientos_relevantes
-      juicio_diagnostico_clinico
+    mapa_campos = [
+      ["Nombre y Apellidos:", %w[nombre_y_apellidos_del_afectado nombre afectado paciente]],
+      ["DNI/NIE:", %w[dni_nie dni nie]],
+      ["Centro Residencial:", %w[centro_residencial___geriatrico centro geriatrico residencia]],
+      ["Antecedentes y Tratamientos:", %w[antecedentes_medicos_y_tratamientos_relevantes antecedentes tratamiento]],
+      ["Juicio Diagnóstico:", %w[juicio_diagnostico_clinico diagnostico juicio_diagnostico]]
     ]
 
-    campos_paciente.each do |id|
-      campo = buscar_campo(id)
-      next unless campo
-
-      valor = @datos[campo.id]
+    mapa_campos.each do |etiqueta, claves|
+      valor = obtener_valor_flexible(claves)
       next if valor.nil? || valor.to_s.strip.empty?
 
-      filas << ["<b>#{campo.nombre}:</b>", formatear_valor(valor)]
+      filas << ["<b>#{etiqueta}</b>", valor]
     end
 
+    # Se muestra la sección solo si existen datos a imprimir
     return if filas.empty?
 
-    pdf.text "I. DATOS DEL AFECTADO Y ANTECEDENTES", size: 10, style: :bold
+    pdf.text "I. DATOS DE IDENTIFICACIÓN Y CLÍNICOS", size: 9.5, style: :bold
     pdf.move_down 4
 
     pdf.table(filas, width: pdf.bounds.width) do |t|
       t.cells.padding = [2, 2, 2, 0]
       t.cells.borders = []
-      t.cells.size = 9.5
+      t.cells.size = 9
       t.cells.inline_format = true
-      t.column(0).width = pdf.bounds.width * 0.45
-      t.column(1).width = pdf.bounds.width * 0.55
+      t.column(0).width = pdf.bounds.width * 0.40
+      t.column(1).width = pdf.bounds.width * 0.60
     end
 
-    pdf.move_down 12
+    pdf.move_down 10
   end
 
   # ============================================================
-  # SECCIÓN II: EXPLORACIÓN PSIQUIÁTRICA
+  # II. EXPLORACIÓN PSIQUIÁTRICA (Viñetas garantizadas)
   # ============================================================
 
   def generar_exploracion_psiquiatrica(pdf)
     respuestas = []
 
     (1..10).each do |numero|
-      id = "pregunta_#{numero}"
-      campo = buscar_campo(id)
+      clave = "pregunta_#{numero}"
+      campo = buscar_campo(clave)
       next unless campo
 
       valor = @datos[campo.id]
@@ -200,69 +174,98 @@ class GeneradorPdfService
 
     return if respuestas.empty?
 
-    pdf.text "II. EXPLORACIÓN PSIQUIÁTRICA", size: 10, style: :bold
-    pdf.move_down 6
+    pdf.text "II. EXPLORACIÓN PSIQUIÁTRICA", size: 9.5, style: :bold
+    pdf.move_down 4
 
     respuestas.each do |linea|
-      pdf.text linea, size: 9.5, align: :justify, leading: 2, inline_format: true
-      pdf.move_down 3
+      pdf.text linea, size: 9, align: :justify, leading: 1.5, inline_format: true
+      pdf.move_down 2
     end
 
-    pdf.move_down 12
+    pdf.move_down 10
   end
 
   # ============================================================
-  # SECCIÓN III: DICTAMEN PERICIAL
+  # III. EVALUACIÓN Y DICTAMEN PERICIAL
   # ============================================================
 
   def generar_dictamen_conclusion(pdf)
-    pdf.text "III. DICTAMEN PERICIAL Y CONCLUSIONES", size: 10, style: :bold
+    pdf.text "III. EVALUACIÓN Y DICTAMEN PERICIAL", size: 9.5, style: :bold
+    pdf.move_down 4
+
+    capacidad = obtener_valor_flexible(%w[mantiene_capacidad_para_prestar_consentimiento_valido_ capacidad consentimiento]) || "No"
+    riesgo    = obtener_valor_flexible(%w[criterios_de_riesgo_detectados riesgo criterios_riesgo]) || "Riesgo de autoagresión o desamparo grave"
+    dictamen  = obtener_valor_flexible(%w[sentido_del_dictamen_pericial dictamen sentido_dictamen]) || "Favorable a la ratificación"
+    colegiado = obtener_valor_flexible(%w[identificacion_del_medico_forense__n__colegiado_ colegiado reg]) || "—"
+
+    pdf.text "• <b>Capacidad de Consentimiento:</b> #{capacidad} mantiene capacidad para prestar consentimiento libre y válido.", size: 9, inline_format: true
+    pdf.move_down 2
+    pdf.text "• <b>Riesgo Detectado:</b> #{riesgo}.", size: 9, inline_format: true
     pdf.move_down 6
 
-    capacidad = obtener_valor_campo("mantiene_capacidad_para_prestar_consentimiento_valido_") || "No"
-    riesgo    = obtener_valor_campo("criterios_de_riesgo_detectados") || "Riesgo de autoagresión o desamparo grave"
-    dictamen  = obtener_valor_campo("sentido_del_dictamen_pericial") || "Favorable a la ratificación"
-    colegiado = obtener_valor_campo("identificacion_del_medico_forense__n__colegiado_") || "—"
+    # Se usa inline_format: true para procesar el <b>
+    pdf.text "<b>CONCLUSIÓN:</b>", size: 9.5, inline_format: true
+    pdf.move_down 2
 
-    texto_conclusion = <<~TEXTO
-      En virtud de la exploración realizada y los antecedentes obrantes:
+    texto_conclusion = "A la vista de la exploración médica practicada y las circunstancias del/la paciente, se estima que el ingreso residencial resulta una medida necesaria y proporcionada para asegurar su protección e integridad.\n\nPor lo expuesto, el sentido del dictamen es:"
+    pdf.text texto_conclusion, size: 9, align: :justify, leading: 2
 
-      1. ¿Mantiene capacidad para prestar consentimiento válido?: <b>#{capacidad}</b>.
-      2. Criterios de riesgo detectados: <b>#{riesgo}</b>.
-      3. Sentido del dictamen pericial: <b>#{dictamen}</b>.
+    pdf.move_down 6
 
-      Lo que se emite e informa a los efectos judiciales oportunos.
-    TEXTO
+    # Recuadro con el resultado final del dictamen
+    pdf.bounding_box([10, pdf.cursor], width: pdf.bounds.width - 20) do
+      pdf.stroke_color "000000"
+      pdf.line_width 0.6
+      pdf.stroke_bounds
 
-    pdf.text texto_conclusion, size: 9.5, align: :justify, leading: 2.5, inline_format: true
-    pdf.move_down 20
+      pdf.move_down 5
+      pdf.text "<b>#{dictamen.upcase} DEL INTERNAMIENTO INVOLUNTARIO</b>", size: 9, style: :bold, align: :center, inline_format: true
+      pdf.move_down 5
+    end
+
+    pdf.move_down 10
+    pdf.text "Lo que emito e informo a los efectos judiciales oportunos.", size: 8.5, style: :italic
+
+    pdf.move_down 15
 
     # Bloque de Firma
-    pdf.bounding_box([pdf.bounds.width - 200, pdf.cursor], width: 200) do
-      pdf.text "El Médico Forense,", size: 9.5
-      pdf.move_down 25
-      pdf.text "Fdo.: #{MEDICO}", size: 9.5, style: :bold
-      pdf.text "Nº Colegiado / Reg.: #{colegiado}", size: 8.5
+    pdf.bounding_box([pdf.bounds.width - 180, pdf.cursor], width: 180) do
+      pdf.text "El Médico Forense,", size: 9
+      pdf.move_down 22
+      pdf.text "Fdo.: #{MEDICO}", size: 9, style: :bold
+      pdf.text "Nº Col./Reg.: #{colegiado}", size: 8
     end
   end
 
   # ============================================================
-  # FUNCIONES DE APOYO
+  # MÉTODOS DE BÚSQUEDA Y AUXILIARES
   # ============================================================
 
-  def obtener_valor_campo(id)
-    campo = buscar_campo(id)
-    return nil unless campo
+  def obtener_valor_flexible(posibles_claves)
+    posibles_claves.each do |clave|
+      campo = buscar_campo(clave)
+      if campo
+        valor = @datos[campo.id]
+        return formatear_valor(valor) if valor && !valor.to_s.strip.empty?
+      end
 
-    valor = @datos[campo.id]
-    return nil if valor.nil? || valor.to_s.strip.empty?
+      # Búsqueda directa en el hash de datos
+      valor_directo = @datos[clave] || @datos[clave.to_sym]
+      return formatear_valor(valor_directo) if valor_directo && !valor_directo.to_s.strip.empty?
+    end
 
-    formatear_valor(valor)
+    nil
   end
 
   def buscar_campo(id)
     return nil unless @tipo.respond_to?(:campos)
-    @tipo.campos.find { |c| c.id.to_s.downcase == id.to_s.downcase }
+
+    id_limpio = id.to_s.downcase.strip
+    @tipo.campos.find do |c|
+      nombre_normalizado = c.nombre.to_s.downcase.gsub(/[^a-z0-9]+/, "_").gsub(/^_+|_+$/, "")
+
+      c.id.to_s.downcase.strip == id_limpio || nombre_normalizado == id_limpio
+    end
   end
 
   def obtener_frase(campo, valor)
@@ -282,7 +285,7 @@ class GeneradorPdfService
     pdf.number_pages(
       "Página <page> de <total>",
       at: [pdf.bounds.right - 80, 10],
-      size: 8,
+      size: 7.5,
       align: :right,
       color: "444444"
     )
